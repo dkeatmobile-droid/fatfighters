@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fat Fighters</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- iOS PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Fat Fighters">
+
+    <!-- App Icon (Lightning Bolt, Electric Blue) -->
+    <link rel="apple-touch-icon" href="icon.png">
+
+    <style>
+        /* ------------------------------
+           GLOBAL STYLES
+        ------------------------------ */
+        body {
+            margin: 0;
+            background: #000;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        .screen {
+            display: none;
+            padding: 20px;
+        }
+
+        .active {
+            display: block;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #00C8FF;
+        }
+
+        /* ------------------------------
+           DASHBOARD GRID
+        ------------------------------ */
+        .dashGrid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .tile {
+            background: #111;
+            border: 2px solid #00C8FF;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .bigTile {
+            grid-column: span 1;
+            height: 160px;
+        }
+
+        .smallTile {
+            height: 130px;
+        }
+
+        .fullTile {
+            grid-column: span 2;
+            height: 130px;
+        }
+
+        .mainValue {
+            font-size: 32px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        /* ------------------------------
+           CUSTOM CSS ARROWS
+        ------------------------------ */
+        .arrow {
+            display: inline-block;
+            width: 0;
+            height: 0;
+            margin-right: 6px;
+        }
+
+        .arrow.down {
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 16px solid #39FF14; /* neon green */
+        }
+
+        .arrow.up {
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 16px solid #FF0033; /* neon red */
+        }
+
+        .arrow.none {
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 4px solid grey;
+        }
+
+        .changeRow {
+            margin-top: 8px;
+            font-size: 18px;
+        }
+
+        .bmiCategory {
+            margin-top: 6px;
+            font-size: 14px;
+        }
+
+        /* ------------------------------
+           PHOTO BUTTON
+        ------------------------------ */
+        .photoButton {
+            background: #00C8FF;
+            color: black;
+            font-size: 20px;
+            padding: 15px;
+            border-radius: 12px;
+            border: none;
+            font-weight: bold;
+            width: 100%;
+        }
+
+        /* ------------------------------
+           NAVIGATION
+        ------------------------------ */
+        nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: #111;
+            border-top: 2px solid #00C8FF;
+            display: flex;
+        }
+
+        nav button {
+            flex: 1;
+            padding: 15px;
+            background: #111;
+            color: white;
+            border: none;
+            font-size: 16px;
+        }
+
+        nav button.activeTab {
+            background: #00C8FF;
+            color: black;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="screen active">
+        <h2>Hi David</h2>
+
+        <div class="dashGrid">
+
+            <!-- WEIGHT -->
+            <div class="tile bigTile">
+                <h3>Weight</h3>
+                <div class="mainValue" id="dashWeight">--</div>
+                <div class="changeRow">
+                    <span class="arrow" id="weightArrow"></span>
+                    <span id="weightChange">--</span>
+                </div>
+            </div>
+
+            <!-- BMI -->
+            <div class="tile bigTile">
+                <h3>BMI</h3>
+                <div class="mainValue" id="dashBMI">--</div>
+                <div class="changeRow">
+                    <span class="arrow" id="bmiArrow"></span>
+                    <span id="bmiChange">--</span>
+                </div>
+                <div class="bmiCategory" id="bmiCategory">--</div>
+            </div>
+
+            <!-- WAIST -->
+            <div class="tile smallTile">
+                <h3>Waist</h3>
+                <div class="mainValue" id="dashWaist">--</div>
+                <div class="changeRow">
+                    <span class="arrow" id="waistArrow"></span>
+                    <span id="waistChange">--</span>
+                </div>
+            </div>
+
+            <!-- TOTALS -->
+            <div class="tile smallTile">
+                <h3>Total Lost</h3>
+                <div>Weight: <span id="totalWeightLost">--</span></div>
+                <div>Waist: <span id="totalWaistLost">--</span></div>
+            </div>
+
+            <!-- STREAK -->
+            <div class="tile smallTile">
+                <h3>Streak</h3>
+                <div class="mainValue" id="streakValue">--</div>
+                <div id="streakEmoji">🔥</div>
+            </div>
+
+            <!-- INJECTION -->
+            <div class="tile fullTile">
+                <h3>Next Injection</h3>
+                <div class="mainValue" id="injectionCountdown">--</div>
+            </div>
+
+            <!-- PHOTO BUTTON -->
+            <button class="photoButton fullTile" onclick="takeProgressPhoto()">
+                📸 Take Weekly Progress Photo
+            </button>
+
+        </div>
+    </div>
+
+    <!-- OTHER SCREENS -->
+    <div id="log" class="screen"><h2>Log</h2></div>
+    <div id="graphs" class="screen"><h2>Graphs</h2></div>
+    <div id="goals" class="screen"><h2>Goals</h2></div>
+    <div id="settings" class="screen"><h2>Settings</h2></div>
+
+    <!-- NAVIGATION -->
+    <nav>
+        <button onclick="showScreen('dashboard')" class="activeTab">Home</button>
+        <button onclick="showScreen('log')">Log</button>
+        <button onclick="showScreen('graphs')">Graphs</button>
+        <button onclick="showScreen('goals')">Goals</button>
+        <button onclick="showScreen('settings')">Settings</button>
+    </nav>
+
+    <script>
+        /* ------------------------------
+           NAVIGATION
+        ------------------------------ */
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('activeTab'));
+            event.target.classList.add('activeTab');
+        }
+
+        /* ------------------------------
+           PHOTO BUTTON
+        ------------------------------ */
+        function takeProgressPhoto() {
+            const date = new Date().toISOString().split('T')[0];
+            alert("Suggested filename: progress-" + date + ".jpg");
+
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = "image/*";
+            input.capture = "environment";
+            input.click();
+        }
+
+        /* ------------------------------
+           PWA SERVICE WORKER
+        ------------------------------ */
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("service-worker.js");
+        }
+    </script>
+
+</body>
+</html>
