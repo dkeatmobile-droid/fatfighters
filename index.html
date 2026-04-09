@@ -16,9 +16,9 @@
     <style>
         body {
             margin: 0;
-            background: #000;
+            background: #2A2A2A;
             color: white;
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
         }
 
         .screen {
@@ -33,6 +33,18 @@
         h2 {
             margin-top: 0;
             color: #00C8FF;
+            text-shadow: 0 0 10px #00C8FF;
+        }
+
+        /* GLASS CARD STYLE */
+        .glass {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 15px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 20px rgba(0, 200, 255, 0.2);
         }
 
         .dashGrid {
@@ -42,53 +54,54 @@
         }
 
         .tile {
-            background: #111;
-            border: 2px solid #00C8FF;
-            border-radius: 12px;
-            padding: 15px;
+            height: 140px;
             text-align: center;
         }
-
-        .bigTile { height: 160px; }
-        .smallTile { height: 130px; }
-        .fullTile { grid-column: span 2; height: 130px; }
 
         .mainValue {
             font-size: 32px;
             font-weight: bold;
             margin-top: 10px;
+            text-shadow: 0 0 10px #00C8FF;
         }
 
+        /* NAV BAR */
         nav {
             position: fixed;
             bottom: 0;
             width: 100%;
-            background: #111;
-            border-top: 2px solid #00C8FF;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
             display: flex;
         }
 
         nav button {
             flex: 1;
             padding: 15px;
-            background: #111;
+            background: transparent;
             color: white;
             border: none;
             font-size: 16px;
         }
 
         nav button.activeTab {
-            background: #00C8FF;
-            color: black;
+            color: #00C8FF;
+            text-shadow: 0 0 10px #00C8FF;
         }
 
+        /* INPUTS */
         input {
             width: 100%;
             padding: 12px;
             margin: 8px 0 16px 0;
-            border-radius: 8px;
+            border-radius: 12px;
             border: none;
-            font-size: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
         }
 
         button.saveBtn {
@@ -96,10 +109,11 @@
             padding: 15px;
             background: #00C8FF;
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             font-size: 18px;
             font-weight: bold;
             color: black;
+            box-shadow: 0 0 15px #00C8FF;
         }
     </style>
 </head>
@@ -111,22 +125,22 @@
         <h2>Hi <span id="dashName">David</span></h2>
 
         <div class="dashGrid">
-            <div class="tile bigTile">
+            <div class="glass tile">
                 <h3>Weight</h3>
                 <div class="mainValue" id="dashWeight">--</div>
             </div>
 
-            <div class="tile bigTile">
+            <div class="glass tile">
                 <h3>BMI</h3>
                 <div class="mainValue" id="dashBMI">--</div>
             </div>
 
-            <div class="tile smallTile">
+            <div class="glass tile">
                 <h3>Waist</h3>
                 <div class="mainValue" id="dashWaist">--</div>
             </div>
 
-            <div class="tile fullTile">
+            <div class="glass tile">
                 <h3>Next Injection</h3>
                 <div class="mainValue" id="dashInjection">--</div>
             </div>
@@ -136,41 +150,43 @@
     <!-- LOG -->
     <div id="log" class="screen">
         <h2>Log</h2>
-        <p>Coming soon.</p>
+        <div class="glass" style="padding:20px;">Coming soon.</div>
     </div>
 
     <!-- GRAPHS -->
     <div id="graphs" class="screen">
         <h2>Graphs</h2>
-        <p>Coming soon.</p>
+        <div class="glass" style="padding:20px;">Coming soon.</div>
     </div>
 
     <!-- GOALS -->
     <div id="goals" class="screen">
         <h2>Goals</h2>
-        <p>Coming soon.</p>
+        <div class="glass" style="padding:20px;">Coming soon.</div>
     </div>
 
     <!-- SETTINGS / PROFILE -->
     <div id="settings" class="screen">
         <h2>Your Profile</h2>
 
-        <label>Name</label>
-        <input id="profileName" type="text" placeholder="David">
+        <div class="glass" style="padding:20px;">
+            <label>Name</label>
+            <input id="profileName" type="text" placeholder="David">
 
-        <label>Height (cm)</label>
-        <input id="profileHeight" type="number" placeholder="175">
+            <label>Height (cm)</label>
+            <input id="profileHeight" type="number" placeholder="175">
 
-        <label>Starting Weight (kg)</label>
-        <input id="profileStartWeight" type="number" placeholder="100">
+            <label>Starting Weight (kg)</label>
+            <input id="profileStartWeight" type="number" placeholder="100">
 
-        <label>Waist (cm)</label>
-        <input id="profileWaist" type="number" placeholder="120">
+            <label>Waist (cm)</label>
+            <input id="profileWaist" type="number" placeholder="120">
 
-        <label>Injection Day</label>
-        <input id="profileInjectionDay" type="text" placeholder="Monday">
+            <label>Injection Day</label>
+            <input id="profileInjectionDay" type="text" placeholder="Monday">
 
-        <button class="saveBtn" onclick="saveProfile()">Save Profile</button>
+            <button class="saveBtn" onclick="saveProfile()">Save Profile</button>
+        </div>
     </div>
 
     <!-- NAVIGATION -->
