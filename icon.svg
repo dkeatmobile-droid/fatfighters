@@ -1,37 +1,26 @@
-const CACHE_NAME = "fatfighters-cache-v2";
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background: soft grey glass -->
+  <rect width="512" height="512" rx="40" fill="#2A2A2A"/>
 
-const FILES_TO_CACHE = [
-  "index.html",
-  "manifest.json",
-  "icon.svg"
-];
+  <!-- Frosted glass overlay -->
+  <rect width="512" height="512" rx="40"
+        fill="rgba(255,255,255,0.08)"
+        style="backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);"/>
 
-self.addEventListener("install", event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(FILES_TO_CACHE))
-  );
-  self.skipWaiting();
-});
+  <!-- Neon glow behind bolt -->
+  <circle cx="256" cy="256" r="180" fill="#00C8FF" opacity="0.15"/>
 
-self.addEventListener("activate", event => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.map(key => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      )
-    )
-  );
-  self.clients.claim();
-});
+  <!-- Lightning bolt -->
+  <polygon points="280,60 140,300 240,300 200,460 360,220 240,220"
+           fill="#00C8FF"
+           stroke="#00C8FF"
+           stroke-width="12"
+           stroke-linejoin="round"/>
 
-self.addEventListener("fetch", event => {
-  event.respondWith(
-    caches.match(event.request).then(response => {
-      return response || fetch(event.request);
-    })
-  );
-});
+  <!-- Outer glow ring -->
+  <circle cx="256" cy="256" r="240"
+          stroke="#00C8FF"
+          stroke-width="6"
+          opacity="0.25"
+          fill="none"/>
+</svg>
