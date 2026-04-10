@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Fat Fighters</title>
+    <title>Forge</title>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="icon.svg">
@@ -32,9 +32,9 @@
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .btn-primary:active { transform: scale(0.96); }
-        /* Compact form fields */
+        /* Compact inputs */
         input[type="date"], input[type="number"], input[type="text"] {
-            height: 52px;
+            height: 50px;
             font-size: 1.05rem;
         }
         .comparison-slider { position: relative; overflow: hidden; height: 420px; border-radius: 1.5rem; }
@@ -51,7 +51,7 @@
     <div id="dashboard" class="screen p-6 max-w-lg mx-auto">
         <div class="flex justify-between items-start mb-8">
             <div>
-                <h1 class="text-4xl font-bold tracking-tighter text-cyan-400">Fat Fighters</h1>
+                <h1 class="text-4xl font-bold tracking-tighter text-cyan-400">Forge</h1>
                 <p class="text-zinc-400 mt-1">Hi, <span id="dashName" class="font-semibold text-white">Warrior</span> 👊</p>
             </div>
             <div class="text-right">
@@ -99,24 +99,24 @@
         </button>
     </div>
 
-    <!-- LOG (compact with shorter date field) -->
+    <!-- LOG -->
     <div id="log" class="screen p-5 max-w-lg mx-auto hidden" style="max-height: calc(100vh - 110px); overflow-y: auto;">
         <h2 class="text-3xl font-bold mb-6 text-cyan-400 tracking-tight">Today’s Log</h2>
         
         <div class="glass rounded-3xl p-6 space-y-6">
             <div>
                 <label class="block text-xs text-zinc-400 mb-1.5">DATE</label>
-                <input id="logDate" type="date" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-white">
+                <input id="logDate" type="date" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-3.5 text-white">
             </div>
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs text-zinc-400 mb-1.5">WEIGHT (kg)</label>
-                    <input id="logWeight" type="number" step="0.1" placeholder="92.5" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-white">
+                    <input id="logWeight" type="number" step="0.1" placeholder="92.5" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-3.5 text-white">
                 </div>
                 <div>
                     <label class="block text-xs text-zinc-400 mb-1.5">WAIST (cm)</label>
-                    <input id="logWaist" type="number" step="0.1" placeholder="105" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-white">
+                    <input id="logWaist" type="number" step="0.1" placeholder="105" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-3.5 text-white">
                 </div>
             </div>
 
@@ -130,7 +130,7 @@
                     <button onclick="selectSite(this)" data-site="Arm-Left" class="site-btn px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-sm transition">Arm L</button>
                     <button onclick="selectSite(this)" data-site="Arm-Right" class="site-btn px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-sm transition">Arm R</button>
                 </div>
-                <input id="logDose" type="number" step="0.1" placeholder="Dose (mg)" class="mt-5 w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-white">
+                <input id="logDose" type="number" step="0.1" placeholder="Dose (mg)" class="mt-5 w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-3.5 text-white">
             </div>
 
             <div class="pt-4 border-t border-zinc-700">
@@ -141,7 +141,8 @@
             <div class="pt-4 border-t border-zinc-700">
                 <p class="text-xs text-zinc-400 mb-2">PROGRESS PHOTO</p>
                 <input id="photoInput" type="file" accept="image/*" class="hidden" onchange="handlePhoto(this)">
-                <button onclick="document.getElementById('photoInput').click()" class="w-full border border-dashed border-zinc-600 py-7 rounded-3xl text-zinc-400 hover:text-white transition flex flex-col items-center gap-2">
+                <button onclick="document.getElementById('photoInput').click()" 
+                        class="w-full border border-dashed border-zinc-600 py-7 rounded-3xl text-zinc-400 hover:text-white transition flex flex-col items-center gap-2">
                     <span class="text-2xl">📸</span>
                     <span class="text-sm">Tap to add photo</span>
                 </button>
@@ -228,8 +229,8 @@
     </div>
 
     <script>
-        let entries = JSON.parse(localStorage.getItem("fatfightersEntries") || "[]");
-        let profile = JSON.parse(localStorage.getItem("fatfightersProfile") || {});
+        let entries = JSON.parse(localStorage.getItem("forgeEntries") || "[]");
+        let profile = JSON.parse(localStorage.getItem("forgeProfile") || {});
         let chartInstance = null;
         let selectedSite = null;
         let currentPhoto = null;
@@ -344,13 +345,13 @@
             }
 
             entries.unshift(entry);
-            localStorage.setItem("fatfightersEntries", JSON.stringify(entries));
+            localStorage.setItem("forgeEntries", JSON.stringify(entries));
 
             if (entry.dose && profile.nextInjection) {
                 let d = new Date(profile.nextInjection);
                 d.setDate(d.getDate() + 7);
                 profile.nextInjection = d.toISOString().split('T')[0];
-                localStorage.setItem("fatfightersProfile", JSON.stringify(profile));
+                localStorage.setItem("forgeProfile", JSON.stringify(profile));
             }
 
             if (calculateStreak() % 7 === 0) confetti({particleCount: 180, spread: 80, origin: { y: 0.6 }});
@@ -366,7 +367,7 @@
             profile.usualDose = parseFloat(document.getElementById('profileUsualDose').value) || 1.0;
             profile.nextInjection = document.getElementById('profileNextInjection').value;
 
-            localStorage.setItem("fatfightersProfile", JSON.stringify(profile));
+            localStorage.setItem("forgeProfile", JSON.stringify(profile));
             alert("✅ Profile updated");
             loadDashboard();
         }
