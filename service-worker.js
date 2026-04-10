@@ -1,37 +1,443 @@
-const CACHE_NAME = "fatfighters-cache-v2";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fat Fighters</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="icon.svg">
 
-const FILES_TO_CACHE = [
-  "index.html",
-  "manifest.json",
-  "icon.svg"
-];
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
-self.addEventListener("install", event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(FILES_TO_CACHE))
-  );
-  self.skipWaiting();
-});
+    <style>
+        body { font-family: system-ui, sans-serif; }
+        .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.15); }
+        .nav-btn.active { color: #22d3ee; border-bottom: 3px solid #22d3ee; }
+        .mainValue { font-size: 2.8rem; line-height: 1; font-weight: 700; }
+        .highlight-red { color: #ef4444; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
+        .photo-grid img { transition: transform 0.3s; }
+        .photo-grid img:hover { transform: scale(1.05); }
+        .comparison-slider { position: relative; overflow: hidden; height: 420px; }
+        .comparison-slider img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; }
+        .slider-handle {
+            position: absolute; top: 0; bottom: 0; width: 4px; background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5); cursor: ew-resize; z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-zinc-950 text-white min-h-screen pb-24">
 
-self.addEventListener("activate", event => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.map(key => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      )
-    )
-  );
-  self.clients.claim();
-});
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="screen p-6 max-w-lg mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-4xl font-bold text-cyan-400">Fat Fighters</h1>
+                <p class="text-zinc-400">Hi, <span id="dashName" class="font-semibold">Warrior</span> 👊</p>
+            </div>
+            <div class="text-right">
+                <div id="streakDisplay" class="text-3xl font-bold text-orange-400">0 🔥</div>
+                <div class="text-xs text-zinc-500">day streak</div>
+            </div>
+        </div>
 
-self.addEventListener("fetch", event => {
-  event.respondWith(
-    caches.match(event.request).then(response => {
-      return response || fetch(event.request);
-    })
-  );
-});
+        <div class="glass rounded-3xl p-5 mb-6 flex items-center gap-4">
+            <div class="flex-1 text-center">
+                <div id="fighterLevel" class="text-lg font-bold text-yellow-400">Rookie</div>
+                <div class="text-xs text-zinc-400">Level</div>
+            </div>
+            <div class="h-12 w-px bg-zinc-700"></div>
+            <div class="flex-1 text-center">
+                <div id="weeklyLoss" class="text-lg font-bold text-emerald-400">— kg</div>
+                <div class="text-xs text-zinc-400">This week</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-8">
+            <div class="glass rounded-3xl p-6 text-center">
+                <p class="text-sm text-zinc-400">Weight</p>
+                <div id="dashWeight" class="mainValue">—</div><span class="text-emerald-400 text-sm">kg</span>
+            </div>
+            <div class="glass rounded-3xl p-6 text-center">
+                <p class="text-sm text-zinc-400">BMI</p>
+                <div id="dashBMI" class="mainValue">—</div>
+            </div>
+            <div class="glass rounded-3xl p-6 text-center">
+                <p class="text-sm text-zinc-400">Waist</p>
+                <div id="dashWaist" class="mainValue">—</div><span class="text-amber-400 text-sm">cm</span>
+            </div>
+            <div class="glass rounded-3xl p-6 text-center">
+                <p class="text-sm text-zinc-400">Next Injection</p>
+                <div id="dashNextInjection" class="mainValue">—</div>
+                <p id="dashNextLabel" class="text-xs mt-1"></p>
+            </div>
+        </div>
+
+        <button onclick="showScreen('log')" class="w-full bg-gradient-to-r from-cyan-400 to-emerald-400 text-zinc-950 font-bold py-5 rounded-3xl text-xl shadow-lg">
+            Log Today + Injection
+        </button>
+    </div>
+
+    <!-- LOG -->
+    <div id="log" class="screen p-6 max-w-lg mx-auto hidden">
+        <h2 class="text-3xl font-bold mb-6 text-cyan-400">Today's Battle Log</h2>
+        <div class="glass rounded-3xl p-6 space-y-8">
+            <div>
+                <label class="block text-sm text-zinc-400 mb-2">Date</label>
+                <input id="logDate" type="date" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm text-zinc-400 mb-1">Weight (kg)</label>
+                    <input id="logWeight" type="number" step="0.1" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3">
+                </div>
+                <div>
+                    <label class="block text-sm text-zinc-400 mb-1">Waist (cm)</label>
+                    <input id="logWaist" type="number" step="0.1" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3">
+                </div>
+            </div>
+
+            <!-- Injection -->
+            <div class="pt-4 border-t border-zinc-700">
+                <p class="text-sm text-zinc-400 mb-3">Injection</p>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="selectSite(this)" data-site="Abdomen-Left" class="site-btn px-4 py-2 bg-zinc-800 rounded-2xl text-sm">Abdomen L</button>
+                    <button onclick="selectSite(this)" data-site="Abdomen-Right" class="site-btn px-4 py-2 bg-zinc-800 rounded-2xl text-sm">Abdomen R</button>
+                    <button onclick="selectSite(this)" data-site="Thigh-Left" class="site-btn px-4 py-2 bg-zinc-800 rounded-2xl text-sm">Thigh L</button>
+                    <button onclick="selectSite(this)" data-site="Thigh-Right" class="site-btn px-4 py-2 bg-zinc-800 rounded-2xl text-sm">Thigh R</button>
+                    <button onclick="selectSite(this)" data-site="Arm-Left" class="site-btn px-4 py-2 bg-zinc-800 rounded-2xl text-sm">Arm L</button>
+                    <button onclick="selectSite(this)" data-site="Arm-Right" class="site-btn px-4 py-2 bg-zinc-800 rounded-2xl text-sm">Arm R</button>
+                </div>
+                <input id="logDose" type="number" step="0.1" placeholder="Dose taken (mg)" class="mt-4 w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3">
+            </div>
+
+            <!-- Side Effects -->
+            <div class="pt-4 border-t border-zinc-700">
+                <p class="text-sm text-zinc-400 mb-3">Side Effects (tap to select)</p>
+                <div id="sideEffectsContainer" class="grid grid-cols-2 gap-2"></div>
+            </div>
+
+            <!-- Nutrition -->
+            <div class="pt-4 border-t border-zinc-700">
+                <p class="text-sm text-zinc-400 mb-3">Quick Nutrition</p>
+                <div class="grid grid-cols-3 gap-3">
+                    <input id="logProtein" type="number" placeholder="Protein g" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-center">
+                    <input id="logWater" type="number" placeholder="Water L" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-center">
+                    <input id="logFiber" type="number" placeholder="Fiber g" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-center">
+                </div>
+            </div>
+
+            <!-- Photo -->
+            <div class="pt-4 border-t border-zinc-700">
+                <p class="text-sm text-zinc-400 mb-2">Progress Photo</p>
+                <input id="photoInput" type="file" accept="image/*" class="hidden" onchange="handlePhoto(this)">
+                <button onclick="document.getElementById('photoInput').click()" class="w-full border border-dashed border-zinc-600 py-8 rounded-3xl text-zinc-400 hover:text-white">
+                    📸 Tap to add photo
+                </button>
+                <div id="photoPreview" class="mt-4 hidden rounded-2xl overflow-hidden">
+                    <img id="previewImg" class="w-full">
+                </div>
+            </div>
+
+            <button onclick="saveLogEntry()" class="w-full bg-emerald-500 py-5 rounded-3xl font-bold text-lg">Save Log Entry</button>
+        </div>
+    </div>
+
+    <!-- GRAPHS -->
+    <div id="graphs" class="screen p-6 max-w-lg mx-auto hidden">
+        <h2 class="text-3xl font-bold mb-6 text-cyan-400">Progress Arena</h2>
+        <div class="glass rounded-3xl p-6">
+            <canvas id="progressChart" height="280"></canvas>
+        </div>
+    </div>
+
+    <!-- PHOTOS -->
+    <div id="photos" class="screen p-6 max-w-lg mx-auto hidden">
+        <h2 class="text-3xl font-bold mb-2 text-cyan-400">Visual Progress</h2>
+        <p class="text-zinc-400 mb-6">Your transformation battle log 📸</p>
+        <div id="photoGallery" class="photo-grid grid grid-cols-2 gap-4"></div>
+        <div id="noPhotos" class="text-center py-12 text-zinc-500 hidden">
+            <p class="text-6xl mb-4">📸</p>
+            <p>No photos yet.<br>Upload your first one in Log.</p>
+        </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div id="profile" class="screen p-6 max-w-lg mx-auto hidden">
+        <h2 class="text-3xl font-bold mb-6 text-cyan-400">Fighter Profile</h2>
+        <div class="glass rounded-3xl p-6 space-y-6">
+            <div>
+                <label class="block text-sm text-zinc-400 mb-1">Name</label>
+                <input id="profileName" type="text" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm text-zinc-400 mb-1">Height (cm)</label>
+                    <input id="profileHeight" type="number" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3">
+                </div>
+                <div>
+                    <label class="block text-sm text-zinc-400 mb-1">Usual Dose (mg)</label>
+                    <input id="profileUsualDose" type="number" step="0.1" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3">
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm text-zinc-400 mb-1">Next Injection Date</label>
+                <input id="profileNextInjection" type="date" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3">
+            </div>
+            <button onclick="saveProfile()" class="w-full bg-cyan-400 text-zinc-950 font-bold py-4 rounded-2xl">Save Settings</button>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-zinc-900 border-t border-zinc-800 max-w-lg mx-auto">
+        <div class="flex text-xs">
+            <button onclick="showScreen('dashboard')" class="nav-btn active flex-1 py-4 flex flex-col items-center">🏠<br>Home</button>
+            <button onclick="showScreen('log')" class="nav-btn flex-1 py-4 flex flex-col items-center">📝<br>Log</button>
+            <button onclick="showScreen('graphs')" class="nav-btn flex-1 py-4 flex flex-col items-center">📈<br>Graphs</button>
+            <button onclick="showScreen('photos')" class="nav-btn flex-1 py-4 flex flex-col items-center">📸<br>Photos</button>
+            <button onclick="showScreen('profile')" class="nav-btn flex-1 py-4 flex flex-col items-center">👤<br>Profile</button>
+        </div>
+    </nav>
+
+    <!-- Comparison Modal -->
+    <div id="comparisonModal" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+        <div class="max-w-lg w-full">
+            <div class="flex justify-between mb-4 items-center">
+                <h3 class="text-xl font-semibold" id="modalTitle">Before vs After</h3>
+                <button onclick="closeComparison()" class="text-3xl">×</button>
+            </div>
+            <div id="comparisonContainer" class="comparison-slider rounded-3xl overflow-hidden shadow-2xl"></div>
+            <p class="text-center text-xs text-zinc-500 mt-4">Drag the white line ←→</p>
+        </div>
+    </div>
+
+    <script>
+        let entries = JSON.parse(localStorage.getItem("fatfightersEntries") || "[]");
+        let profile = JSON.parse(localStorage.getItem("fatfightersProfile") || {});
+        let chartInstance = null;
+        let selectedSite = null;
+        let currentPhoto = null;
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            const btn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.getAttribute('onclick').includes(`'${id}'`));
+            if (btn) btn.classList.add('active');
+
+            if (id === 'graphs') renderChart();
+            if (id === 'dashboard') loadDashboard();
+            if (id === 'log') initLogScreen();
+            if (id === 'photos') renderPhotoGallery();
+        }
+
+        function calculateStreak() {
+            if (entries.length === 0) return 0;
+            let dates = [...new Set(entries.map(e => e.date))].sort().reverse();
+            let streak = 1;
+            for (let i = 1; i < dates.length; i++) {
+                if ((new Date(dates[i-1]) - new Date(dates[i])) / 86400000 === 1) streak++;
+                else break;
+            }
+            return streak;
+        }
+
+        function getFighterLevel(streak) {
+            if (streak >= 30) return "Legend";
+            if (streak >= 14) return "Veteran";
+            if (streak >= 7) return "Warrior";
+            return "Rookie";
+        }
+
+        function loadDashboard() {
+            document.getElementById('dashName').textContent = profile.name || "Warrior";
+            const latest = entries[0] || {};
+            document.getElementById('dashWeight').textContent = latest.weight || "—";
+            document.getElementById('dashWaist').textContent = latest.waist || "—";
+            if (profile.height && latest.weight) {
+                const bmi = (latest.weight / Math.pow(profile.height/100, 2)).toFixed(1);
+                document.getElementById('dashBMI').textContent = bmi;
+            } else document.getElementById('dashBMI').textContent = "—";
+
+            const streak = calculateStreak();
+            document.getElementById('streakDisplay').innerHTML = `${streak} <span class="text-xl">🔥</span>`;
+            document.getElementById('fighterLevel').textContent = getFighterLevel(streak);
+
+            const nextEl = document.getElementById('dashNextInjection');
+            if (profile.nextInjection) {
+                nextEl.textContent = profile.nextInjection;
+                document.getElementById('dashNextLabel').textContent = new Date(profile.nextInjection) <= new Date() ? "Due / Overdue" : "Upcoming";
+            } else {
+                nextEl.textContent = "Not set";
+            }
+        }
+
+        function selectSite(btn) {
+            document.querySelectorAll('.site-btn').forEach(b => b.classList.remove('bg-cyan-500', 'text-black'));
+            btn.classList.add('bg-cyan-500', 'text-black');
+            selectedSite = btn.dataset.site;
+        }
+
+        function initLogScreen() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('logDate').value = today;
+            document.getElementById('photoPreview').classList.add('hidden');
+            currentPhoto = null;
+
+            const container = document.getElementById('sideEffectsContainer');
+            container.innerHTML = ["Nausea","Fatigue","Constipation","Diarrhea","Headache"].map(se => 
+                `<div onclick="this.classList.toggle('bg-red-500');this.classList.toggle('text-white')" class="side-effect px-4 py-3 bg-zinc-800 rounded-2xl text-center cursor-pointer">${se}</div>`
+            ).join('');
+        }
+
+        function handlePhoto(input) {
+            if (input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    currentPhoto = e.target.result;
+                    document.getElementById('previewImg').src = currentPhoto;
+                    document.getElementById('photoPreview').classList.remove('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function saveLogEntry() {
+            const entry = {
+                date: document.getElementById('logDate').value,
+                weight: parseFloat(document.getElementById('logWeight').value),
+                waist: parseFloat(document.getElementById('logWaist').value),
+                dose: parseFloat(document.getElementById('logDose').value),
+                site: selectedSite,
+                sideEffects: Array.from(document.querySelectorAll('.side-effect.bg-red-500')).map(el => el.textContent),
+                protein: parseFloat(document.getElementById('logProtein').value),
+                water: parseFloat(document.getElementById('logWater').value),
+                fiber: parseFloat(document.getElementById('logFiber').value),
+                photo: currentPhoto
+            };
+
+            entries.unshift(entry);
+            localStorage.setItem("fatfightersEntries", JSON.stringify(entries));
+
+            if (entry.dose && profile.nextInjection) {
+                let d = new Date(profile.nextInjection);
+                d.setDate(d.getDate() + 7);
+                profile.nextInjection = d.toISOString().split('T')[0];
+                localStorage.setItem("fatfightersProfile", JSON.stringify(profile));
+            }
+
+            if (calculateStreak() % 7 === 0) confetti({particleCount: 120, spread: 70});
+
+            alert("✅ Log saved! Keep fighting!");
+            loadDashboard();
+            showScreen('dashboard');
+        }
+
+        function saveProfile() {
+            profile.name = document.getElementById('profileName').value || "Warrior";
+            profile.height = parseFloat(document.getElementById('profileHeight').value);
+            profile.usualDose = parseFloat(document.getElementById('profileUsualDose').value);
+            profile.nextInjection = document.getElementById('profileNextInjection').value;
+            localStorage.setItem("fatfightersProfile", JSON.stringify(profile));
+            alert("✅ Profile saved!");
+            loadDashboard();
+        }
+
+        function renderChart() {
+            if (chartInstance) chartInstance.destroy();
+            const ctx = document.getElementById('progressChart');
+            const sorted = [...entries].reverse();
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sorted.map(e => e.date),
+                    datasets: [
+                        { label: 'Weight (kg)', data: sorted.map(e => e.weight), borderColor: '#22d3ee', tension: 0.3 },
+                        { label: 'Waist (cm)', data: sorted.map(e => e.waist), borderColor: '#fbbf24', tension: 0.3 },
+                        { label: 'Dose (mg)', data: sorted.map(e => e.dose), borderColor: '#c084fc', tension: 0.3, yAxisID: 'y1' }
+                    ]
+                },
+                options: { scales: { y: { grid: { color: '#3f3f46' } }, y1: { position: 'right', grid: { color: '#3f3f46' } } } }
+            });
+        }
+
+        function renderPhotoGallery() {
+            const container = document.getElementById('photoGallery');
+            const noPhotos = document.getElementById('noPhotos');
+            container.innerHTML = '';
+            const photos = entries.filter(e => e.photo).sort((a,b) => new Date(b.date) - new Date(a.date));
+            if (photos.length === 0) { noPhotos.classList.remove('hidden'); return; }
+            noPhotos.classList.add('hidden');
+
+            photos.forEach((entry, i) => {
+                const div = document.createElement('div');
+                div.className = "glass rounded-3xl overflow-hidden cursor-pointer";
+                div.innerHTML = `
+                    <img src="${entry.photo}" class="w-full h-56 object-cover">
+                    <div class="p-3 text-xs">
+                        <div class="font-medium">${entry.date}</div>
+                        <div class="text-zinc-400">${entry.weight ? entry.weight + ' kg' : ''} ${entry.waist ? '• ' + entry.waist + ' cm' : ''}</div>
+                    </div>
+                `;
+                div.onclick = () => openComparisonModal(i);
+                container.appendChild(div);
+            });
+        }
+
+        let currentPhotosForCompare = [];
+        function openComparisonModal(startIndex) {
+            const photos = entries.filter(e => e.photo).sort((a,b) => new Date(b.date) - new Date(a.date));
+            currentPhotosForCompare = [photos[startIndex], photos[(startIndex + 1) % photos.length] || photos[startIndex]];
+
+            const container = document.getElementById('comparisonContainer');
+            container.innerHTML = `
+                <img src="${currentPhotosForCompare[0].photo}" style="height:100%;width:100%;object-fit:cover;">
+                <img src="${currentPhotosForCompare[1].photo}" id="afterImg" style="height:100%;width:100%;object-fit:cover;clip-path:polygon(50% 0,100% 0,100% 100%,50% 100%);">
+                <div class="slider-handle" id="sliderHandle" style="left:50%;"></div>
+            `;
+
+            document.getElementById('comparisonModal').classList.remove('hidden');
+
+            const handle = document.getElementById('sliderHandle');
+            const afterImg = document.getElementById('afterImg');
+            let dragging = false;
+
+            const move = (e) => {
+                if (!dragging) return;
+                const rect = container.getBoundingClientRect();
+                let pct = ((e.clientX || (e.touches && e.touches[0].clientX)) - rect.left) / rect.width * 100;
+                pct = Math.max(0, Math.min(100, pct));
+                afterImg.style.clipPath = `polygon(${pct}% 0, 100% 0, 100% 100%, ${pct}% 100%)`;
+                handle.style.left = `${pct}%`;
+            };
+
+            handle.addEventListener('mousedown', () => dragging = true);
+            handle.addEventListener('touchstart', () => dragging = true);
+            document.addEventListener('mouseup', () => dragging = false);
+            document.addEventListener('touchend', () => dragging = false);
+            document.addEventListener('mousemove', move);
+            document.addEventListener('touchmove', move);
+        }
+
+        function closeComparison() {
+            document.getElementById('comparisonModal').classList.add('hidden');
+        }
+
+        function init() {
+            document.getElementById('profileName').value = profile.name || "";
+            document.getElementById('profileHeight').value = profile.height || "";
+            document.getElementById('profileUsualDose').value = profile.usualDose || "";
+            document.getElementById('profileNextInjection').value = profile.nextInjection || "";
+
+            loadDashboard();
+            showScreen('dashboard');
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
