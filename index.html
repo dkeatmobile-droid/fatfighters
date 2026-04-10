@@ -11,27 +11,16 @@
     <meta name="apple-mobile-web-app-title" content="Fat Fighters">
     <link rel="apple-touch-icon" href="icon.svg">
 
-    <!-- Tailwind CSS via CDN (modern & clean) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js for beautiful graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        .glass {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-        }
-        .nav-btn.active {
-            color: #22d3ee;
-            border-bottom: 3px solid #22d3ee;
-        }
-        .mainValue {
-            font-size: 2.75rem;
-            line-height: 1;
-            font-weight: 700;
-        }
+        .glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.15); }
+        .nav-btn.active { color: #22d3ee; border-bottom: 3px solid #22d3ee; }
+        .mainValue { font-size: 2.75rem; line-height: 1; font-weight: 700; }
+        .highlight-red { color: #ef4444; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
     </style>
 </head>
 <body class="bg-zinc-950 text-white min-h-screen pb-20">
@@ -58,14 +47,15 @@
             </div>
             <div class="glass rounded-3xl p-6 text-center">
                 <p class="text-sm text-zinc-400">Next Injection</p>
-                <div id="dashInjection" class="mainValue text-white">—</div>
+                <div id="dashNextInjection" class="mainValue text-white">—</div>
+                <p id="dashNextLabel" class="text-xs"></p>
             </div>
         </div>
 
         <div class="mt-10">
             <button onclick="showScreen('log')" 
-                    class="w-full bg-cyan-400 hover:bg-cyan-300 transition text-zinc-950 font-bold py-4 rounded-2xl text-lg flex items-center justify-center gap-2">
-                <span>📝 Log Today's Data</span>
+                    class="w-full bg-cyan-400 hover:bg-cyan-300 transition text-zinc-950 font-bold py-4 rounded-2xl text-lg">
+                📝 Log Today's Data + Injection
             </button>
         </div>
     </div>
@@ -77,23 +67,38 @@
         <div class="glass rounded-3xl p-6 space-y-6">
             <div>
                 <label class="block text-sm text-zinc-400 mb-1">Date</label>
-                <input id="logDate" type="date" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-white">
+                <input id="logDate" type="date" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3">
             </div>
             <div>
                 <label class="block text-sm text-zinc-400 mb-1">Weight (kg)</label>
-                <input id="logWeight" type="number" step="0.1" placeholder="e.g. 92.5" 
-                       class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-white">
+                <input id="logWeight" type="number" step="0.1" placeholder="92.5" 
+                       class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3">
             </div>
             <div>
                 <label class="block text-sm text-zinc-400 mb-1">Waist (cm)</label>
-                <input id="logWaist" type="number" step="0.1" placeholder="e.g. 105" 
-                       class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-white">
+                <input id="logWaist" type="number" step="0.1" placeholder="105" 
+                       class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3">
             </div>
+
+            <!-- Injection section -->
+            <div class="border-t border-zinc-700 pt-6">
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input id="logInjectionTaken" type="checkbox" class="w-5 h-5 accent-cyan-400">
+                    <span class="text-white">I took my injection today</span>
+                </label>
+                <div class="mt-4">
+                    <label class="block text-sm text-zinc-400 mb-1">Dose taken (mg)</label>
+                    <input id="logDose" type="number" step="0.1" placeholder="1.0" 
+                           class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3">
+                </div>
+            </div>
+
             <div>
-                <label class="block text-sm text-zinc-400 mb-1">Notes (optional)</label>
-                <textarea id="logNotes" rows="2" placeholder="Feeling stronger today..."
-                          class="w-full bg-zinc-900 border border-zinc-700 rounded-3xl px-4 py-3 text-white"></textarea>
+                <label class="block text-sm text-zinc-400 mb-1">Notes</label>
+                <textarea id="logNotes" rows="2" placeholder="Felt great after shot..." 
+                          class="w-full bg-zinc-900 border border-zinc-700 rounded-3xl px-4 py-3"></textarea>
             </div>
+
             <button onclick="saveLogEntry()" 
                     class="w-full bg-emerald-500 hover:bg-emerald-400 transition text-white font-bold py-4 rounded-2xl">
                 Save Entry
@@ -108,46 +113,36 @@
     <div id="graphs" class="screen p-6 max-w-lg mx-auto hidden">
         <h2 class="text-3xl font-bold mb-6 text-cyan-400">Your Progress</h2>
         <div class="glass rounded-3xl p-6">
-            <canvas id="weightChart" height="220"></canvas>
+            <canvas id="progressChart" height="260"></canvas>
         </div>
+        <p class="text-xs text-zinc-500 mt-3 text-center">Weight • Waist • Injection Dose</p>
     </div>
 
-    <!-- GOALS -->
-    <div id="goals" class="screen p-6 max-w-lg mx-auto hidden">
-        <h2 class="text-3xl font-bold mb-6 text-cyan-400">Goals</h2>
+    <!-- GOALS + PROFILE combined for simplicity -->
+    <div id="profile" class="screen p-6 max-w-lg mx-auto hidden">
+        <h2 class="text-3xl font-bold mb-6 text-cyan-400">Profile & Settings</h2>
         <div class="glass rounded-3xl p-6 space-y-8">
             <div>
-                <p class="text-sm text-zinc-400">Target Weight (kg)</p>
-                <input id="goalWeight" type="number" step="0.1" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3">
-            </div>
-            <div>
-                <p class="text-sm text-zinc-400">Target Waist (cm)</p>
-                <input id="goalWaist" type="number" step="0.1" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3">
-            </div>
-            <button onclick="saveGoals()" 
-                    class="w-full bg-cyan-400 hover:bg-cyan-300 transition text-zinc-950 font-bold py-4 rounded-2xl">
-                Save Goals
-            </button>
-        </div>
-    </div>
-
-    <!-- PROFILE -->
-    <div id="settings" class="screen p-6 max-w-lg mx-auto hidden">
-        <h2 class="text-3xl font-bold mb-6 text-cyan-400">Your Profile</h2>
-        <div class="glass rounded-3xl p-6 space-y-6">
-            <div>
                 <label class="block text-sm text-zinc-400 mb-1">Name</label>
-                <input id="profileName" type="text" placeholder="Your name" 
-                       class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3">
+                <input id="profileName" type="text" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3">
             </div>
             <div>
                 <label class="block text-sm text-zinc-400 mb-1">Height (cm)</label>
-                <input id="profileHeight" type="number" placeholder="175" 
+                <input id="profileHeight" type="number" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3">
+            </div>
+            <div>
+                <label class="block text-sm text-zinc-400 mb-1">Next Injection Date</label>
+                <input id="profileNextInjection" type="date" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3">
+            </div>
+            <div>
+                <label class="block text-sm text-zinc-400 mb-1">Usual Dose (mg)</label>
+                <input id="profileUsualDose" type="number" step="0.1" placeholder="1.0" 
                        class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3">
             </div>
+
             <button onclick="saveProfile()" 
                     class="w-full bg-cyan-400 hover:bg-cyan-300 transition text-zinc-950 font-bold py-4 rounded-2xl">
-                Save Profile
+                Save Profile & Next Injection
             </button>
         </div>
     </div>
@@ -155,29 +150,18 @@
     <!-- BOTTOM NAV -->
     <nav class="fixed bottom-0 left-0 right-0 bg-zinc-900 border-t border-zinc-800">
         <div class="max-w-lg mx-auto flex text-xs">
-            <button onclick="showScreen('dashboard')" class="nav-btn active flex-1 py-3 flex flex-col items-center">
-                🏠<br>Home
-            </button>
-            <button onclick="showScreen('log')" class="nav-btn flex-1 py-3 flex flex-col items-center">
-                📝<br>Log
-            </button>
-            <button onclick="showScreen('graphs')" class="nav-btn flex-1 py-3 flex flex-col items-center">
-                📈<br>Graphs
-            </button>
-            <button onclick="showScreen('goals')" class="nav-btn flex-1 py-3 flex flex-col items-center">
-                🎯<br>Goals
-            </button>
-            <button onclick="showScreen('settings')" class="nav-btn flex-1 py-3 flex flex-col items-center">
-                👤<br>Profile
-            </button>
+            <button onclick="showScreen('dashboard')" class="nav-btn active flex-1 py-3 flex flex-col items-center">🏠<br>Home</button>
+            <button onclick="showScreen('log')" class="nav-btn flex-1 py-3 flex flex-col items-center">📝<br>Log</button>
+            <button onclick="showScreen('graphs')" class="nav-btn flex-1 py-3 flex flex-col items-center">📈<br>Graphs</button>
+            <button onclick="showScreen('profile')" class="nav-btn flex-1 py-3 flex flex-col items-center">👤<br>Profile</button>
         </div>
     </nav>
 
     <script>
         let entries = JSON.parse(localStorage.getItem("fatfightersEntries") || "[]");
-        let goals = JSON.parse(localStorage.getItem("fatfightersGoals") || "{}");
-        let profile = JSON.parse(localStorage.getItem("fatfightersProfile") || "{}");
-        let weightChart;
+        let profile = JSON.parse(localStorage.getItem("fatfightersProfile") || {});
+
+        let chart;
 
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
@@ -190,116 +174,167 @@
 
             if (id === 'graphs') renderChart();
             if (id === 'log') renderRecentLogs();
+            if (id === 'dashboard') loadDashboard();
         }
 
         function saveProfile() {
-            profile = {
-                name: document.getElementById('profileName').value || "Warrior",
-                height: parseFloat(document.getElementById('profileHeight').value) || 175
-            };
-            localStorage.setItem("fatfightersProfile", JSON.stringify(profile));
-            alert("✅ Profile saved!");
-            loadDashboard();
-        }
+            profile.name = document.getElementById('profileName').value || "Warrior";
+            profile.height = parseFloat(document.getElementById('profileHeight').value) || 175;
+            profile.nextInjection = document.getElementById('profileNextInjection').value;
+            profile.usualDose = parseFloat(document.getElementById('profileUsualDose').value) || 1.0;
 
-        function saveGoals() {
-            goals = {
-                targetWeight: parseFloat(document.getElementById('goalWeight').value),
-                targetWaist: parseFloat(document.getElementById('goalWaist').value)
-            };
-            localStorage.setItem("fatfightersGoals", JSON.stringify(goals));
-            alert("🎯 Goals saved!");
+            localStorage.setItem("fatfightersProfile", JSON.stringify(profile));
+            alert("✅ Profile & injection settings saved!");
+            loadDashboard();
         }
 
         function saveLogEntry() {
-            const newEntry = {
+            const entry = {
                 date: document.getElementById('logDate').value || new Date().toISOString().split('T')[0],
                 weight: parseFloat(document.getElementById('logWeight').value),
                 waist: parseFloat(document.getElementById('logWaist').value),
+                injectionTaken: document.getElementById('logInjectionTaken').checked,
+                dose: document.getElementById('logInjectionTaken').checked ? 
+                      parseFloat(document.getElementById('logDose').value) || profile.usualDose || 1.0 : null,
                 notes: document.getElementById('logNotes').value
             };
 
-            if (!newEntry.weight && !newEntry.waist) {
-                alert("Please enter at least weight or waist.");
+            if (!entry.weight && !entry.waist && !entry.injectionTaken) {
+                alert("Please enter at least weight, waist, or mark injection taken.");
                 return;
             }
 
-            entries.unshift(newEntry); // newest first
+            entries.unshift(entry);
             localStorage.setItem("fatfightersEntries", JSON.stringify(entries));
 
-            alert("✅ Entry saved!");
+            // Auto-advance next injection date by 7 days if taken
+            if (entry.injectionTaken && profile.nextInjection) {
+                let nextDate = new Date(profile.nextInjection);
+                nextDate.setDate(nextDate.getDate() + 7);
+                profile.nextInjection = nextDate.toISOString().split('T')[0];
+                localStorage.setItem("fatfightersProfile", JSON.stringify(profile));
+            }
+
+            alert("✅ Entry saved!" + (entry.injectionTaken ? " Injection confirmed." : ""));
             loadDashboard();
             renderRecentLogs();
             showScreen('dashboard');
-        }
-
-        function renderRecentLogs() {
-            const container = document.getElementById('recentLogs');
-            container.innerHTML = entries.slice(0, 5).map(e => `
-                <div class="glass rounded-2xl p-4 text-sm">
-                    <div class="flex justify-between">
-                        <span class="font-medium">${e.date}</span>
-                        <span>${e.weight ? e.weight + ' kg' : ''} ${e.waist ? '• ' + e.waist + ' cm' : ''}</span>
-                    </div>
-                    ${e.notes ? `<p class="text-zinc-400 text-xs mt-1">${e.notes}</p>` : ''}
-                </div>
-            `).join('');
         }
 
         function loadDashboard() {
             document.getElementById('dashName').textContent = profile.name || "Warrior";
 
             const latest = entries[0];
-            document.getElementById('dashWeight').textContent = latest && latest.weight ? latest.weight : "—";
-            document.getElementById('dashWaist').textContent = latest && latest.waist ? latest.waist : "—";
+            document.getElementById('dashWeight').textContent = latest?.weight || "—";
+            document.getElementById('dashWaist').textContent = latest?.waist || "—";
 
-            if (profile.height && latest && latest.weight) {
+            if (profile.height && latest?.weight) {
                 const bmi = (latest.weight / Math.pow(profile.height / 100, 2)).toFixed(1);
                 document.getElementById('dashBMI').textContent = bmi;
             } else {
                 document.getElementById('dashBMI').textContent = "—";
             }
 
-            document.getElementById('dashInjection').textContent = profile.injectionDay || "—";
+            // Next injection display
+            const nextEl = document.getElementById('dashNextInjection');
+            const labelEl = document.getElementById('dashNextLabel');
+            if (profile.nextInjection) {
+                const today = new Date().toISOString().split('T')[0];
+                nextEl.textContent = profile.nextInjection;
+                if (profile.nextInjection <= today) {
+                    nextEl.classList.add('highlight-red');
+                    labelEl.textContent = "Due now / overdue";
+                    labelEl.classList.add('text-red-400');
+                } else {
+                    nextEl.classList.remove('highlight-red');
+                    labelEl.textContent = "Upcoming";
+                    labelEl.classList.remove('text-red-400');
+                }
+            } else {
+                nextEl.textContent = "Not set";
+                labelEl.textContent = "";
+            }
+        }
+
+        function renderRecentLogs() {
+            const container = document.getElementById('recentLogs');
+            container.innerHTML = entries.slice(0, 6).map(e => `
+                <div class="glass rounded-2xl p-4 text-sm">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="font-medium">${e.date}</span>
+                            ${e.injectionTaken ? `<span class="ml-2 text-emerald-400 text-xs">💉 ${e.dose || ''} mg</span>` : ''}
+                        </div>
+                        <span>${e.weight ? e.weight + ' kg' : ''} ${e.waist ? '• ' + e.waist + ' cm' : ''}</span>
+                    </div>
+                    ${e.notes ? `<p class="text-zinc-400 text-xs mt-2">${e.notes}</p>` : ''}
+                </div>
+            `).join('');
         }
 
         function renderChart() {
-            const ctx = document.getElementById('weightChart');
-            if (weightChart) weightChart.destroy();
+            const ctx = document.getElementById('progressChart');
+            if (chart) chart.destroy();
 
             const sorted = [...entries].reverse();
             const labels = sorted.map(e => e.date);
             const weights = sorted.map(e => e.weight);
+            const waists = sorted.map(e => e.waist);
+            const doses = sorted.map(e => e.dose);
 
-            weightChart = new Chart(ctx, {
+            chart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: 'Weight (kg)',
-                        data: weights,
-                        borderColor: '#22d3ee',
-                        backgroundColor: 'rgba(34, 211, 238, 0.1)',
-                        tension: 0.3,
-                        borderWidth: 3
-                    }]
+                    datasets: [
+                        {
+                            label: 'Weight (kg)',
+                            data: weights,
+                            borderColor: '#22d3ee',
+                            tension: 0.3,
+                            borderWidth: 3
+                        },
+                        {
+                            label: 'Waist (cm)',
+                            data: waists,
+                            borderColor: '#fbbf24',
+                            tension: 0.3,
+                            borderWidth: 3
+                        },
+                        {
+                            label: 'Dose (mg)',
+                            data: doses,
+                            borderColor: '#a78bfa',
+                            tension: 0.3,
+                            borderWidth: 3,
+                            yAxisID: 'y1'
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
-                    plugins: { legend: { display: false } },
+                    interaction: { mode: 'index' },
                     scales: {
-                        y: { grid: { color: '#27272a' } },
+                        y: { grid: { color: '#27272a' }, position: 'left' },
+                        y1: { grid: { color: '#27272a' }, position: 'right', min: 0, max: 3 },
                         x: { grid: { color: '#27272a' } }
+                    },
+                    plugins: {
+                        legend: { display: true, labels: { color: '#a1a1aa', boxWidth: 12 } }
                     }
                 }
             });
         }
 
-        // Init
         function init() {
-            // Set today's date in log
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('logDate').value = today;
+
+            // Pre-fill profile inputs
+            document.getElementById('profileName').value = profile.name || "";
+            document.getElementById('profileHeight').value = profile.height || "";
+            document.getElementById('profileNextInjection').value = profile.nextInjection || "";
+            document.getElementById('profileUsualDose').value = profile.usualDose || "1.0";
 
             loadDashboard();
             showScreen('dashboard');
