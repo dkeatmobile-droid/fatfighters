@@ -1,403 +1,218 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Forge</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="icon.svg">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti"></script>
 
-    <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-        }
-        .glass { 
-            background: rgba(30, 30, 40, 0.85); 
-            backdrop-filter: blur(20px); 
-            border: 1px solid rgba(255,255,255,0.12); 
-        }
-        .nav-btn.active { color: #67e8f9; border-bottom: 3px solid #67e8f9; }
-        .mainValue { font-size: 2.85rem; line-height: 1; font-weight: 700; }
-
-        /* Your chosen logo - clean and reliable */
-        .forge-logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .forge-text {
-            font-size: 3.0rem;
-            font-weight: 700;
-            letter-spacing: -0.03em;
-            background: linear-gradient(90deg, #67e8f9, #bae6fd);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .forge-spark {
-            position: relative;
-            width: 34px;
-            height: 34px;
-        }
-        .forge-spark::before {
-            content: '';
-            position: absolute;
-            top: 4px;
-            left: 6px;
-            width: 22px;
-            height: 22px;
-            background: #67e8f9;
-            border-radius: 50%;
-            box-shadow: 0 0 22px #67e8f9, 0 0 36px #22d3ee;
-            animation: spark 2s infinite alternate ease-in-out;
-        }
-        @keyframes spark {
-            from { opacity: 0.8; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1.25); }
-        }
-    </style>
+<style>
+body { font-family: system-ui; }
+.glass { background: rgba(30,30,40,0.85); backdrop-filter: blur(20px); }
+.nav-btn.active { color:#67e8f9; border-bottom:3px solid #67e8f9; }
+.mainValue { font-size:2.5rem; font-weight:700; }
+</style>
 </head>
-<body class="bg-zinc-950 text-white min-h-screen pb-24">
 
-    <!-- DASHBOARD -->
-    <div id="dashboard" class="screen p-6 max-w-lg mx-auto">
-        <div class="flex justify-between items-center mb-8">
-            <div class="forge-logo">
-                <div class="forge-spark"></div>
-                <h1 class="forge-text">Forge</h1>
-            </div>
-            <div class="text-right">
-                <div id="streakDisplay" class="text-4xl font-bold text-orange-400">0 🔥</div>
-                <div class="text-xs text-zinc-500">STREAK</div>
-            </div>
-        </div>
+<body class="bg-zinc-950 text-white">
 
-        <div class="glass rounded-3xl p-6 mb-8">
-            <div class="grid grid-cols-2 gap-6 text-center">
-                <div>
-                    <div id="dashBMI" class="mainValue text-cyan-400">—</div>
-                    <div class="text-xs text-zinc-400">CURRENT BMI</div>
-                </div>
-                <div>
-                    <div id="startBMI" class="mainValue text-amber-400">—</div>
-                    <div class="text-xs text-zinc-400">START BMI</div>
-                </div>
-            </div>
-        </div>
+<!-- DASHBOARD -->
+<div id="dashboard" class="screen p-6 max-w-lg mx-auto">
+<h1 class="text-3xl font-bold text-cyan-400 mb-4">Forge</h1>
 
-        <div class="grid grid-cols-2 gap-4">
-            <div class="glass rounded-3xl p-6 text-center">
-                <p class="text-sm text-zinc-400">Weight</p>
-                <div id="dashWeight" class="mainValue">—</div>
-                <p class="text-emerald-400 text-sm">kg</p>
-            </div>
-            <div class="glass rounded-3xl p-6 text-center">
-                <p class="text-sm text-zinc-400">Waist</p>
-                <div id="dashWaist" class="mainValue">—</div>
-                <p class="text-amber-400 text-sm">inches</p>
-            </div>
-        </div>
+<div class="mb-6">
+<div id="streakDisplay" class="text-3xl text-orange-400">0 🔥</div>
+</div>
 
-        <button onclick="showScreen('log')" class="bg-gradient-to-r from-cyan-400 to-sky-400 w-full mt-10 py-5 rounded-3xl font-semibold text-xl text-zinc-950">
-            Log Today’s Progress
-        </button>
-    </div>
+<div class="grid grid-cols-2 gap-4">
+<div class="glass p-4 rounded-xl text-center">
+<p>Weight</p>
+<div id="dashWeight" class="mainValue">—</div>
+</div>
+<div class="glass p-4 rounded-xl text-center">
+<p>Waist</p>
+<div id="dashWaist" class="mainValue">—</div>
+</div>
+</div>
 
-    <!-- LOG -->
-    <div id="log" class="screen p-5 max-w-lg mx-auto hidden" style="max-height: calc(100vh - 110px); overflow-y: auto;">
-        <h2 class="text-3xl font-bold mb-6 text-cyan-400">Today’s Log</h2>
-        
-        <div class="glass rounded-3xl p-6 space-y-6">
-            <div>
-                <label class="block text-xs text-zinc-400 mb-1.5">DATE</label>
-                <input id="logDate" type="date" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-3.5 text-white">
-            </div>
+<button onclick="showScreen('log')" class="mt-6 w-full bg-cyan-400 text-black py-4 rounded-xl">
+Log Progress
+</button>
+</div>
 
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs text-zinc-400 mb-1.5">WEIGHT (kg)</label>
-                    <input id="logWeight" type="number" step="0.1" placeholder="92.5" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-3.5 text-white">
-                </div>
-                <div>
-                    <label class="block text-xs text-zinc-400 mb-1.5">WAIST (inches)</label>
-                    <input id="logWaist" type="number" step="0.1" placeholder="42.0" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-3.5 text-white">
-                </div>
-            </div>
+<!-- LOG -->
+<div id="log" class="screen hidden p-6 max-w-lg mx-auto">
+<h2 class="text-2xl mb-4">Log Entry</h2>
 
-            <div class="pt-4 border-t border-zinc-700">
-                <p class="text-xs text-zinc-400 mb-3">INJECTION</p>
-                <div class="flex flex-wrap gap-2">
-                    <button onclick="selectSite(this)" data-site="Abdomen-Left" class="site-btn px-5 py-2.5 bg-zinc-800 rounded-2xl text-sm">Abd L</button>
-                    <button onclick="selectSite(this)" data-site="Abdomen-Right" class="site-btn px-5 py-2.5 bg-zinc-800 rounded-2xl text-sm">Abd R</button>
-                    <button onclick="selectSite(this)" data-site="Thigh-Left" class="site-btn px-5 py-2.5 bg-zinc-800 rounded-2xl text-sm">Thigh L</button>
-                    <button onclick="selectSite(this)" data-site="Thigh-Right" class="site-btn px-5 py-2.5 bg-zinc-800 rounded-2xl text-sm">Thigh R</button>
-                    <button onclick="selectSite(this)" data-site="Arm-Left" class="site-btn px-5 py-2.5 bg-zinc-800 rounded-2xl text-sm">Arm L</button>
-                    <button onclick="selectSite(this)" data-site="Arm-Right" class="site-btn px-5 py-2.5 bg-zinc-800 rounded-2xl text-sm">Arm R</button>
-                </div>
-                <input id="logDose" type="number" step="0.1" placeholder="Dose (mg)" class="mt-5 w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-3.5 text-white">
-            </div>
+<input id="logDate" type="date" class="w-full mb-3 text-black p-2">
 
-            <div class="pt-4 border-t border-zinc-700">
-                <p class="text-xs text-zinc-400 mb-3">SIDE EFFECTS (tap to mark)</p>
-                <div id="sideEffectsContainer" class="grid grid-cols-2 gap-2 text-sm"></div>
-            </div>
+<input id="logWeight" type="number" placeholder="Weight" class="w-full mb-3 text-black p-2">
+<input id="logWaist" type="number" placeholder="Waist" class="w-full mb-3 text-black p-2">
+<input id="logDose" type="number" placeholder="Dose" class="w-full mb-3 text-black p-2">
 
-            <div class="pt-4 border-t border-zinc-700">
-                <p class="text-xs text-zinc-400 mb-2">PROGRESS PHOTO</p>
-                <input id="photoInput" type="file" accept="image/*" class="hidden" onchange="handlePhoto(this)">
-                <button onclick="document.getElementById('photoInput').click()" 
-                        class="w-full border border-dashed border-zinc-600 py-7 rounded-3xl text-zinc-400 hover:text-white">
-                    📸 Tap to add photo
-                </button>
-                <div id="photoPreview" class="mt-4 hidden rounded-2xl overflow-hidden">
-                    <img id="previewImg" class="w-full">
-                </div>
-            </div>
+<input id="photoInput" type="file" accept="image/*" onchange="handlePhoto(this)">
 
-            <button onclick="saveLogEntry()" class="bg-gradient-to-r from-cyan-400 to-sky-400 w-full py-5 rounded-3xl font-semibold text-lg text-zinc-950 mt-4">
-                Save Entry
-            </button>
-        </div>
-    </div>
+<button onclick="saveLogEntry()" class="mt-4 w-full bg-cyan-400 text-black py-3 rounded">
+Save
+</button>
+</div>
 
-    <!-- GRAPHS -->
-    <div id="graphs" class="screen p-6 max-w-lg mx-auto hidden">
-        <h2 class="text-3xl font-bold mb-6 text-cyan-400">Your Progress</h2>
-        <div class="glass rounded-3xl p-6">
-            <canvas id="progressChart" height="290"></canvas>
-        </div>
-    </div>
+<!-- GRAPH -->
+<div id="graphs" class="screen hidden p-6 max-w-lg mx-auto">
+<canvas id="chart"></canvas>
+</div>
 
-    <!-- PHOTOS -->
-    <div id="photos" class="screen p-6 max-w-lg mx-auto hidden">
-        <h2 class="text-3xl font-bold mb-2 text-cyan-400">Visual Progress</h2>
-        <p class="text-zinc-400 mb-6">Watch your transformation unfold</p>
-        <div id="photoGallery" class="grid grid-cols-2 gap-4"></div>
-        <div id="noPhotos" class="hidden text-center py-20 text-zinc-500">
-            <p class="text-7xl mb-4">📸</p>
-            <p>No photos yet</p>
-        </div>
-    </div>
+<!-- NAV -->
+<nav class="fixed bottom-0 left-0 right-0 bg-zinc-900 flex">
+<button onclick="showScreen('dashboard')" class="nav-btn flex-1 p-3 active">Home</button>
+<button onclick="showScreen('log')" class="nav-btn flex-1 p-3">Log</button>
+<button onclick="showScreen('graphs')" class="nav-btn flex-1 p-3">Graph</button>
+</nav>
 
-    <!-- PROFILE -->
-    <div id="profile" class="screen p-6 max-w-lg mx-auto hidden">
-        <h2 class="text-3xl font-bold mb-6 text-cyan-400">Your Profile</h2>
-        <div class="glass rounded-3xl p-6 space-y-6">
-            <div>
-                <label class="block text-xs text-zinc-400 mb-1.5">NAME</label>
-                <input id="profileName" type="text" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-white">
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs text-zinc-400 mb-1.5">HEIGHT (cm)</label>
-                    <input id="profileHeight" type="number" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-white">
-                </div>
-                <div>
-                    <label class="block text-xs text-zinc-400 mb-1.5">START WEIGHT (kg)</label>
-                    <input id="profileStartWeight" type="number" step="0.1" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-white">
-                </div>
-            </div>
-            <div>
-                <label class="block text-xs text-zinc-400 mb-1.5">USUAL DOSE (mg)</label>
-                <input id="profileUsualDose" type="number" step="0.1" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-white">
-            </div>
-            <div>
-                <label class="block text-xs text-zinc-400 mb-1.5">NEXT INJECTION DATE</label>
-                <input id="profileNextInjection" type="date" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-white">
-            </div>
-            <button onclick="saveProfile()" class="bg-gradient-to-r from-cyan-400 to-sky-400 w-full py-5 rounded-3xl font-semibold text-lg text-zinc-950">
-                Save Profile
-            </button>
-        </div>
-    </div>
+<script>
+let entries = JSON.parse(localStorage.getItem("forgeEntries") || "[]");
 
-    <!-- BOTTOM NAV -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-zinc-900 border-t border-zinc-800 max-w-lg mx-auto">
-        <div class="flex text-xs">
-            <button onclick="showScreen('dashboard')" class="nav-btn active flex-1 py-4 flex flex-col items-center">🏠<br>Home</button>
-            <button onclick="showScreen('log')" class="nav-btn flex-1 py-4 flex flex-col items-center">📝<br>Log</button>
-            <button onclick="showScreen('graphs')" class="nav-btn flex-1 py-4 flex flex-col items-center">📈<br>Graphs</button>
-            <button onclick="showScreen('photos')" class="nav-btn flex-1 py-4 flex flex-col items-center">📸<br>Photos</button>
-            <button onclick="showScreen('profile')" class="nav-btn flex-1 py-4 flex flex-col items-center">👤<br>Profile</button>
-        </div>
-    </nav>
+// ✅ SORT FIX
+entries = entries.sort((a,b)=>new Date(b.date)-new Date(a.date));
 
-    <script>
-        let entries = JSON.parse(localStorage.getItem("forgeEntries") || "[]");
-        let profile = JSON.parse(localStorage.getItem("forgeProfile") || {});
+let chart;
+let currentPhoto=null;
 
-        let chartInstance = null;
-        let selectedSite = null;
-        let currentPhoto = null;
+function showScreen(id){
+document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
+document.getElementById(id).classList.remove('hidden');
 
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-            document.getElementById(id).classList.remove('hidden');
+if(id==="graphs") renderChart();
+if(id==="dashboard") loadDashboard();
+if(id==="log") initLog();
+}
 
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            const btn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.getAttribute('onclick').includes(`'${id}'`));
-            if (btn) btn.classList.add('active');
+function calculateStreak(){
+if(!entries.length) return 0;
+const dates=[...new Set(entries.map(e=>e.date))].sort().reverse();
+let streak=1;
 
-            if (id === 'graphs') renderChart();
-            if (id === 'dashboard') loadDashboard();
-            if (id === 'log') initLogScreen();
-            if (id === 'photos') renderPhotoGallery();
-        }
+for(let i=1;i<dates.length;i++){
+if((new Date(dates[i-1])-new Date(dates[i]))/86400000===1) streak++;
+else break;
+}
+return streak;
+}
 
-        function calculateStreak() {
-            if (entries.length === 0) return 0;
-            const dates = [...new Set(entries.map(e => e.date))].sort().reverse();
-            let streak = 1;
-            for (let i = 1; i < dates.length; i++) {
-                if ((new Date(dates[i-1]) - new Date(dates[i])) / 86400000 === 1) streak++;
-                else break;
-            }
-            return streak;
-        }
+function loadDashboard(){
+if(!entries.length){
+dashWeight.textContent="—";
+dashWaist.textContent="—";
+streakDisplay.textContent="0 🔥";
+return;
+}
 
-        function loadDashboard() {
-            const latest = entries[0] || {};
-            document.getElementById('dashWeight').textContent = latest.weight || "—";
-            document.getElementById('dashWaist').textContent = latest.waist ? latest.waist.toFixed(1) : "—";
+const latest=entries[0];
+dashWeight.textContent=latest.weight ?? "—";
+dashWaist.textContent=latest.waist ?? "—";
 
-            if (profile.height) {
-                if (latest.weight) {
-                    const currentBMI = (latest.weight / Math.pow(profile.height / 100, 2)).toFixed(1);
-                    document.getElementById('dashBMI').textContent = currentBMI;
-                }
-                if (profile.startWeight) {
-                    const startBMI = (profile.startWeight / Math.pow(profile.height / 100, 2)).toFixed(1);
-                    document.getElementById('startBMI').textContent = startBMI;
-                }
-            }
-        }
+streakDisplay.textContent=calculateStreak()+" 🔥";
+}
 
-        function selectSite(btn) {
-            document.querySelectorAll('.site-btn').forEach(b => b.classList.remove('bg-cyan-500', 'text-black'));
-            btn.classList.add('bg-cyan-500', 'text-black');
-            selectedSite = btn.dataset.site;
-        }
+function initLog(){
+logDate.value=new Date().toISOString().split("T")[0];
+logWeight.value="";
+logWaist.value="";
+logDose.value="";
+currentPhoto=null;
+}
 
-        function initLogScreen() {
-            document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
-            document.getElementById('photoPreview').classList.add('hidden');
-            currentPhoto = null;
+function handlePhoto(input){
+const file=input.files[0];
+if(!file) return;
 
-            const container = document.getElementById('sideEffectsContainer');
-            container.innerHTML = ["Nausea","Fatigue","Constipation","Diarrhea","Headache"].map(se => `
-                <div onclick="this.classList.toggle('bg-red-500');this.classList.toggle('text-white')" 
-                     class="side-effect px-5 py-3 bg-zinc-800 rounded-2xl text-center cursor-pointer text-sm transition">
-                    ${se}
-                </div>
-            `).join('');
-        }
+const img=new Image();
+const reader=new FileReader();
 
-        function handlePhoto(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    currentPhoto = e.target.result;
-                    document.getElementById('previewImg').src = currentPhoto;
-                    document.getElementById('photoPreview').classList.remove('hidden');
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
+reader.onload=e=>img.src=e.target.result;
 
-        function saveLogEntry() {
-            const entry = {
-                date: document.getElementById('logDate').value || new Date().toISOString().split('T')[0],
-                weight: parseFloat(document.getElementById('logWeight').value),
-                waist: parseFloat(document.getElementById('logWaist').value),
-                dose: parseFloat(document.getElementById('logDose').value),
-                site: selectedSite,
-                sideEffects: Array.from(document.querySelectorAll('.side-effect.bg-red-500')).map(el => el.textContent.trim()),
-                photo: currentPhoto
-            };
+img.onload=()=>{
+const canvas=document.createElement("canvas");
+const scale=600/img.width;
 
-            if (!entry.weight && !entry.waist && !entry.dose) {
-                alert("Please enter at least weight, waist or dose.");
-                return;
-            }
+canvas.width=600;
+canvas.height=img.height*scale;
 
-            entries.unshift(entry);
-            localStorage.setItem("forgeEntries", JSON.stringify(entries));
+const ctx=canvas.getContext("2d");
+ctx.drawImage(img,0,0,canvas.width,canvas.height);
 
-            if (entry.dose && profile.nextInjection) {
-                let d = new Date(profile.nextInjection);
-                d.setDate(d.getDate() + 7);
-                profile.nextInjection = d.toISOString().split('T')[0];
-                localStorage.setItem("forgeProfile", JSON.stringify(profile));
-            }
+currentPhoto=canvas.toDataURL("image/jpeg",0.7);
+};
 
-            if (calculateStreak() % 7 === 0) confetti({particleCount: 150, spread: 70});
+reader.readAsDataURL(file);
+}
 
-            alert("✅ Log saved!");
-            loadDashboard();
-            showScreen('dashboard');
-        }
+function saveLogEntry(){
 
-        function saveProfile() {
-            profile.name = document.getElementById('profileName').value || "Warrior";
-            profile.height = parseFloat(document.getElementById('profileHeight').value) || 175;
-            profile.startWeight = parseFloat(document.getElementById('profileStartWeight').value);
-            profile.usualDose = parseFloat(document.getElementById('profileUsualDose').value) || 1.0;
-            profile.nextInjection = document.getElementById('profileNextInjection').value;
+const entry={
+date:logDate.value,
+weight:parseFloat(logWeight.value)||null,
+waist:parseFloat(logWaist.value)||null,
+dose:parseFloat(logDose.value)||null,
+photo:currentPhoto
+};
 
-            localStorage.setItem("forgeProfile", JSON.stringify(profile));
-            alert("✅ Profile saved!");
-            loadDashboard();
-        }
+if(!entry.weight && !entry.waist && !entry.dose){
+alert("Enter data");
+return;
+}
 
-        function renderChart() {
-            if (chartInstance) chartInstance.destroy();
-            const ctx = document.getElementById('progressChart');
-            const sorted = [...entries].reverse();
-            chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: sorted.map(e => e.date),
-                    datasets: [
-                        { label: 'Weight kg', data: sorted.map(e => e.weight), borderColor: '#67e8f9', tension: 0.3 },
-                        { label: 'Waist inches', data: sorted.map(e => e.waist), borderColor: '#fbbf24', tension: 0.3 },
-                        { label: 'Dose mg', data: sorted.map(e => e.dose), borderColor: '#c4b5fd', tension: 0.3, yAxisID: 'y1' }
-                    ]
-                },
-                options: {
-                    scales: {
-                        y: { grid: { color: '#27272a' } },
-                        y1: { position: 'right', grid: { color: '#27272a' }, min: 0 }
-                    }
-                }
-            });
-        }
+// ✅ REMOVE DUPLICATE DATE
+entries=entries.filter(e=>e.date!==entry.date);
 
-        function renderPhotoGallery() {
-            const container = document.getElementById('photoGallery');
-            container.innerHTML = entries.filter(e => e.photo).map(e => `
-                <div class="glass rounded-3xl overflow-hidden">
-                    <img src="${e.photo}" class="w-full h-48 object-cover">
-                    <div class="p-3 text-xs">${e.date}</div>
-                </div>
-            `).join('') || '<div class="text-center py-20 text-zinc-500"><p class="text-7xl">📸</p><p>No photos yet</p></div>';
-        }
+entries.unshift(entry);
 
-        function init() {
-            document.getElementById('profileName').value = profile.name || "";
-            document.getElementById('profileHeight').value = profile.height || "";
-            document.getElementById('profileStartWeight').value = profile.startWeight || "";
-            document.getElementById('profileUsualDose').value = profile.usualDose || "";
-            document.getElementById('profileNextInjection').value = profile.nextInjection || "";
+// ✅ SORT AGAIN
+entries=entries.sort((a,b)=>new Date(b.date)-new Date(a.date));
 
-            loadDashboard();
-            showScreen('dashboard');
-        }
+localStorage.setItem("forgeEntries",JSON.stringify(entries));
 
-        window.onload = init;
-    </script>
+if(calculateStreak()%7===0){
+confetti({particleCount:120});
+}
+
+showScreen("dashboard");
+}
+
+function renderChart(){
+if(chart) chart.destroy();
+
+const ctx=document.getElementById("chart");
+
+const sorted=[...entries].reverse();
+
+chart=new Chart(ctx,{
+type:"line",
+data:{
+labels:sorted.map(e=>e.date),
+datasets:[
+{
+label:"Weight",
+data:sorted.map(e=>e.weight ?? null),
+borderColor:"#67e8f9"
+},
+{
+label:"Waist",
+data:sorted.map(e=>e.waist ?? null),
+borderColor:"#fbbf24"
+}
+]
+}
+});
+}
+
+window.onload=()=>{
+showScreen("dashboard");
+};
+</script>
+
 </body>
 </html>
