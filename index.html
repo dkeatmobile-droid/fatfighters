@@ -25,28 +25,46 @@
         }
         .nav-btn.active { color: #67e8f9; border-bottom: 3px solid #67e8f9; }
         .mainValue { font-size: 2.85rem; line-height: 1; font-weight: 700; letter-spacing: -0.02em; }
+
         .forge-logo {
             display: flex;
             align-items: center;
-            gap: 12px;
-        }
-        .forge-icon {
-            width: 42px;
-            height: 42px;
+            gap: 14px;
         }
         .forge-text {
-            font-size: 2.75rem;
+            font-size: 2.85rem;
             font-weight: 700;
             letter-spacing: -0.04em;
-            background: linear-gradient(90deg, #67e8f9, #a5f3fc);
+            background: linear-gradient(90deg, #67e8f9, #e0f2fe);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+        .forge-spark {
+            position: relative;
+        }
+        .forge-spark::after {
+            content: '';
+            position: absolute;
+            top: -8px;
+            right: -6px;
+            width: 14px;
+            height: 14px;
+            background: radial-gradient(circle, #67e8f9 30%, transparent 70%);
+            border-radius: 50%;
+            box-shadow: 0 0 12px #67e8f9;
+            animation: spark 2s infinite alternate;
+        }
+        @keyframes spark {
+            0% { opacity: 0.6; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.1); }
+        }
+
         .btn-primary {
             background: linear-gradient(90deg, #67e8f9, #22d3ee);
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .btn-primary:active { transform: scale(0.96); }
+
         input[type="date"], input[type="number"], input[type="text"] {
             height: 50px;
             font-size: 1.05rem;
@@ -66,12 +84,7 @@
     <div id="dashboard" class="screen p-6 max-w-lg mx-auto">
         <div class="flex justify-between items-start mb-8">
             <div class="forge-logo">
-                <!-- SVG Logo -->
-                <svg class="forge-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M24 6 L30 18 L42 18 L33 28 L39 42 L24 34 L9 42 L15 28 L6 18 L18 18 Z" fill="#67e8f9" stroke="#22d3ee" stroke-width="3" stroke-linejoin="round"/>
-                    <circle cx="24" cy="24" r="6" fill="#0e1729"/>
-                </svg>
-                <h1 class="forge-text">Forge</h1>
+                <h1 class="forge-text forge-spark">Forge</h1>
             </div>
             <div class="text-right">
                 <div id="streakDisplay" class="text-4xl font-bold text-orange-400">0 🔥</div>
@@ -118,15 +131,16 @@
         </button>
     </div>
 
-    <!-- The rest of the app (Log, Graphs, Photos, Profile) remains the same as the previous version -->
     <!-- LOG -->
     <div id="log" class="screen p-5 max-w-lg mx-auto hidden" style="max-height: calc(100vh - 110px); overflow-y: auto;">
         <h2 class="text-3xl font-bold mb-6 text-cyan-400 tracking-tight">Today’s Log</h2>
+        
         <div class="glass rounded-3xl p-6 space-y-6">
             <div>
                 <label class="block text-xs text-zinc-400 mb-1.5">DATE</label>
                 <input id="logDate" type="date" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-3.5 text-white">
             </div>
+
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs text-zinc-400 mb-1.5">WEIGHT (kg)</label>
@@ -175,10 +189,55 @@
         </div>
     </div>
 
-    <!-- GRAPHS, PHOTOS, PROFILE remain unchanged from previous version (copy them from the last full code if needed) -->
-    <!-- For brevity, I'm showing only the changed parts. Use the full structure from my previous response for the other screens. -->
+    <!-- GRAPHS -->
+    <div id="graphs" class="screen p-6 max-w-lg mx-auto hidden">
+        <h2 class="text-3xl font-bold mb-6 text-cyan-400 tracking-tight">Your Progress</h2>
+        <div class="glass rounded-3xl p-6">
+            <canvas id="progressChart" height="290"></canvas>
+        </div>
+    </div>
 
-    <!-- BOTTOM NAV (unchanged) -->
+    <!-- PHOTOS -->
+    <div id="photos" class="screen p-6 max-w-lg mx-auto hidden">
+        <h2 class="text-3xl font-bold mb-2 text-cyan-400 tracking-tight">Visual Progress</h2>
+        <p class="text-zinc-400 mb-6">Watch your transformation unfold</p>
+        <div id="photoGallery" class="photo-grid grid grid-cols-2 gap-4"></div>
+        <div id="noPhotos" class="text-center py-20 text-zinc-500 hidden">
+            <p class="text-7xl mb-4 opacity-50">📸</p>
+            <p class="text-lg">No photos yet</p>
+            <p class="text-sm mt-2">Add one from the Log screen</p>
+        </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div id="profile" class="screen p-6 max-w-lg mx-auto hidden">
+        <h2 class="text-3xl font-bold mb-6 text-cyan-400 tracking-tight">Your Profile</h2>
+        <div class="glass rounded-3xl p-6 space-y-7">
+            <div>
+                <label class="block text-xs text-zinc-400 mb-1.5">NAME</label>
+                <input id="profileName" type="text" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-white">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs text-zinc-400 mb-1.5">HEIGHT (cm)</label>
+                    <input id="profileHeight" type="number" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-white">
+                </div>
+                <div>
+                    <label class="block text-xs text-zinc-400 mb-1.5">USUAL DOSE (mg)</label>
+                    <input id="profileUsualDose" type="number" step="0.1" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-white">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs text-zinc-400 mb-1.5">NEXT INJECTION DATE</label>
+                <input id="profileNextInjection" type="date" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-white">
+            </div>
+            <button onclick="saveProfile()" class="btn-primary w-full py-5 rounded-3xl font-semibold text-lg text-zinc-950">
+                Save Profile
+            </button>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
     <nav class="fixed bottom-0 left-0 right-0 bg-zinc-900/95 backdrop-blur-xl border-t border-zinc-800 max-w-lg mx-auto">
         <div class="flex text-xs">
             <button onclick="showScreen('dashboard')" class="nav-btn active flex-1 py-4 flex flex-col items-center gap-0.5">🏠<br><span class="text-[10px]">Home</span></button>
@@ -189,7 +248,264 @@
         </div>
     </nav>
 
-    <!-- Rest of the JavaScript is the same as the previous version. Just make sure to include the full <script> block from my last response. -->
+    <!-- Comparison Modal -->
+    <div id="comparisonModal" class="hidden fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
+        <div class="max-w-lg w-full">
+            <div class="flex justify-between items-center mb-4 px-1">
+                <h3 class="text-xl font-semibold">Before vs After</h3>
+                <button onclick="closeComparison()" class="text-4xl text-zinc-400 hover:text-white">×</button>
+            </div>
+            <div id="comparisonContainer" class="comparison-slider shadow-2xl"></div>
+            <p class="text-center text-xs text-zinc-500 mt-5">Drag the line to compare</p>
+        </div>
+    </div>
 
+    <script>
+        let entries = JSON.parse(localStorage.getItem("forgeEntries") || "[]");
+        let profile = JSON.parse(localStorage.getItem("forgeProfile") || {});
+        let chartInstance = null;
+        let selectedSite = null;
+        let currentPhoto = null;
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            const btn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.getAttribute('onclick').includes(`'${id}'`));
+            if (btn) btn.classList.add('active');
+
+            if (id === 'graphs') renderChart();
+            if (id === 'dashboard') loadDashboard();
+            if (id === 'log') initLogScreen();
+            if (id === 'photos') renderPhotoGallery();
+        }
+
+        function calculateStreak() {
+            if (entries.length === 0) return 0;
+            const dates = [...new Set(entries.map(e => e.date))].sort().reverse();
+            let streak = 1;
+            for (let i = 1; i < dates.length; i++) {
+                if ((new Date(dates[i-1]) - new Date(dates[i])) / 86400000 === 1) streak++;
+                else break;
+            }
+            return streak;
+        }
+
+        function getFighterLevel(streak) {
+            if (streak >= 30) return "Legend";
+            if (streak >= 14) return "Veteran";
+            if (streak >= 7) return "Warrior";
+            return "Rookie";
+        }
+
+        function loadDashboard() {
+            document.getElementById('dashName').textContent = profile.name || "Warrior";
+            const latest = entries[0] || {};
+            document.getElementById('dashWeight').textContent = latest.weight || "—";
+            document.getElementById('dashWaist').textContent = latest.waist || "—";
+
+            if (profile.height && latest.weight) {
+                const bmi = (latest.weight / Math.pow(profile.height / 100, 2)).toFixed(1);
+                document.getElementById('dashBMI').textContent = bmi;
+            } else {
+                document.getElementById('dashBMI').textContent = "—";
+            }
+
+            const streak = calculateStreak();
+            document.getElementById('streakDisplay').innerHTML = `${streak} <span class="text-2xl">🔥</span>`;
+            document.getElementById('fighterLevel').textContent = getFighterLevel(streak);
+
+            const nextEl = document.getElementById('dashNextInjection');
+            const labelEl = document.getElementById('dashNextLabel');
+            if (profile.nextInjection) {
+                nextEl.textContent = profile.nextInjection;
+                labelEl.textContent = new Date(profile.nextInjection) <= new Date() ? "Due / Overdue" : "Upcoming";
+            } else {
+                nextEl.textContent = "Not set";
+                labelEl.textContent = "";
+            }
+        }
+
+        function selectSite(btn) {
+            document.querySelectorAll('.site-btn').forEach(b => b.classList.remove('bg-cyan-500', 'text-black'));
+            btn.classList.add('bg-cyan-500', 'text-black');
+            selectedSite = btn.dataset.site;
+        }
+
+        function initLogScreen() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('logDate').value = today;
+            document.getElementById('photoPreview').classList.add('hidden');
+            currentPhoto = null;
+
+            const container = document.getElementById('sideEffectsContainer');
+            container.innerHTML = ["Nausea","Fatigue","Constipation","Diarrhea","Headache"].map(se => `
+                <div onclick="this.classList.toggle('bg-red-500');this.classList.toggle('text-white')" 
+                     class="side-effect px-5 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-center cursor-pointer transition text-sm">
+                    ${se}
+                </div>
+            `).join('');
+        }
+
+        function handlePhoto(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    currentPhoto = e.target.result;
+                    document.getElementById('previewImg').src = currentPhoto;
+                    document.getElementById('photoPreview').classList.remove('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function saveLogEntry() {
+            const entry = {
+                date: document.getElementById('logDate').value,
+                weight: parseFloat(document.getElementById('logWeight').value),
+                waist: parseFloat(document.getElementById('logWaist').value),
+                dose: parseFloat(document.getElementById('logDose').value),
+                site: selectedSite,
+                sideEffects: Array.from(document.querySelectorAll('.side-effect.bg-red-500')).map(el => el.textContent.trim()),
+                photo: currentPhoto
+            };
+
+            if (!entry.weight && !entry.waist && !entry.dose) {
+                alert("Please add at least weight, waist or injection dose.");
+                return;
+            }
+
+            entries.unshift(entry);
+            localStorage.setItem("forgeEntries", JSON.stringify(entries));
+
+            if (entry.dose && profile.nextInjection) {
+                let d = new Date(profile.nextInjection);
+                d.setDate(d.getDate() + 7);
+                profile.nextInjection = d.toISOString().split('T')[0];
+                localStorage.setItem("forgeProfile", JSON.stringify(profile));
+            }
+
+            if (calculateStreak() % 7 === 0) confetti({particleCount: 180, spread: 80, origin: { y: 0.6 }});
+
+            alert("✅ Saved successfully!");
+            loadDashboard();
+            showScreen('dashboard');
+        }
+
+        function saveProfile() {
+            profile.name = document.getElementById('profileName').value || "Warrior";
+            profile.height = parseFloat(document.getElementById('profileHeight').value) || 175;
+            profile.usualDose = parseFloat(document.getElementById('profileUsualDose').value) || 1.0;
+            profile.nextInjection = document.getElementById('profileNextInjection').value;
+
+            localStorage.setItem("forgeProfile", JSON.stringify(profile));
+            alert("✅ Profile updated");
+            loadDashboard();
+        }
+
+        function renderChart() {
+            if (chartInstance) chartInstance.destroy();
+            const ctx = document.getElementById('progressChart');
+            const sorted = [...entries].reverse();
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sorted.map(e => e.date),
+                    datasets: [
+                        { label: 'Weight kg', data: sorted.map(e => e.weight), borderColor: '#67e8f9', tension: 0.35, borderWidth: 4 },
+                        { label: 'Waist cm', data: sorted.map(e => e.waist), borderColor: '#fbbf24', tension: 0.35, borderWidth: 4 },
+                        { label: 'Dose mg', data: sorted.map(e => e.dose), borderColor: '#c4b5fd', tension: 0.35, borderWidth: 4, yAxisID: 'y1' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { grid: { color: '#27272a' }, ticks: { color: '#71717a' } },
+                        y1: { position: 'right', grid: { color: '#27272a' }, ticks: { color: '#71717a' }, min: 0 }
+                    },
+                    plugins: { legend: { labels: { color: '#d1d5db', boxWidth: 12 } } }
+                }
+            });
+        }
+
+        function renderPhotoGallery() {
+            const container = document.getElementById('photoGallery');
+            const noPhotos = document.getElementById('noPhotos');
+            container.innerHTML = '';
+
+            const photos = entries.filter(e => e.photo).sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            if (photos.length === 0) {
+                noPhotos.classList.remove('hidden');
+                return;
+            }
+            noPhotos.classList.add('hidden');
+
+            photos.forEach((entry, i) => {
+                const div = document.createElement('div');
+                div.className = "glass rounded-3xl overflow-hidden cursor-pointer shadow-inner";
+                div.innerHTML = `
+                    <img src="${entry.photo}" class="w-full h-60 object-cover">
+                    <div class="p-4 text-xs">
+                        <div class="font-medium">${entry.date}</div>
+                        <div class="text-zinc-400">${entry.weight ? entry.weight+' kg' : ''} ${entry.waist ? '• '+entry.waist+' cm' : ''}</div>
+                    </div>
+                `;
+                div.onclick = () => openComparisonModal(i);
+                container.appendChild(div);
+            });
+        }
+
+        function openComparisonModal(startIndex) {
+            const photos = entries.filter(e => e.photo).sort((a,b) => new Date(b.date) - new Date(a.date));
+            const pair = [photos[startIndex], photos[(startIndex + 1) % photos.length] || photos[startIndex]];
+
+            const container = document.getElementById('comparisonContainer');
+            container.innerHTML = `
+                <img src="${pair[0].photo}" style="height:100%;width:100%;object-fit:cover;">
+                <img id="afterImg" src="${pair[1].photo}" style="height:100%;width:100%;object-fit:cover;clip-path:polygon(50% 0,100% 0,100% 100%,50% 100%);">
+                <div id="sliderHandle" class="slider-handle" style="left:50%;"></div>
+            `;
+
+            document.getElementById('comparisonModal').classList.remove('hidden');
+
+            let dragging = false;
+            const handle = document.getElementById('sliderHandle');
+            const after = document.getElementById('afterImg');
+
+            const move = (e) => {
+                if (!dragging) return;
+                const rect = container.getBoundingClientRect();
+                let pct = ((e.clientX || (e.touches && e.touches[0].clientX)) - rect.left) / rect.width * 100;
+                pct = Math.max(0, Math.min(100, pct));
+                after.style.clipPath = `polygon(${pct}% 0, 100% 0, 100% 100%, ${pct}% 100%)`;
+                handle.style.left = `${pct}%`;
+            };
+
+            handle.addEventListener('mousedown', () => dragging = true);
+            handle.addEventListener('touchstart', () => dragging = true);
+            document.addEventListener('mouseup', () => dragging = false);
+            document.addEventListener('touchend', () => dragging = false);
+            document.addEventListener('mousemove', move);
+            document.addEventListener('touchmove', move);
+        }
+
+        function closeComparison() {
+            document.getElementById('comparisonModal').classList.add('hidden');
+        }
+
+        function init() {
+            document.getElementById('profileName').value = profile.name || "";
+            document.getElementById('profileHeight').value = profile.height || "";
+            document.getElementById('profileUsualDose').value = profile.usualDose || "1.0";
+            document.getElementById('profileNextInjection').value = profile.nextInjection || "";
+
+            loadDashboard();
+            showScreen('dashboard');
+        }
+
+        window.onload = init;
+    </script>
 </body>
 </html>
