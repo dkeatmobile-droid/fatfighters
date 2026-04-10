@@ -24,58 +24,49 @@
         .nav-btn.active { color: #67e8f9; border-bottom: 3px solid #67e8f9; }
         .mainValue { font-size: 2.8rem; line-height: 1; font-weight: 700; }
 
-        /* Exact Logo Option 3 - matching your image */
-        .forge-header {
+        /* Your chosen logo - clean SVG version */
+        .forge-logo {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        .forge-text {
-            font-size: 3.2rem;
-            font-weight: 700;
-            letter-spacing: -0.04em;
-            background: linear-gradient(90deg, #67e8f9, #bae6fd);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            position: relative;
-        }
-        .forge-text::after {
-            content: '';
-            position: absolute;
-            top: -12px;
-            right: -12px;
-            width: 22px;
-            height: 22px;
-            background: #67e8f9;
-            border-radius: 50%;
-            box-shadow: 0 0 25px #67e8f9, 0 0 40px #22d3ee;
-            animation: logo-glow 2.5s infinite alternate ease-in-out;
-        }
-        @keyframes logo-glow {
-            from { opacity: 0.7; transform: scale(0.85); }
-            to { opacity: 1; transform: scale(1.3); }
+            gap: 12px;
         }
     </style>
 </head>
 <body class="bg-zinc-950 text-white min-h-screen pb-24">
 
-    <!-- DASHBOARD -->
+    <!-- DASHBOARD with your exact logo -->
     <div id="dashboard" class="screen p-6 max-w-lg mx-auto">
-        <div class="forge-header">
-            <h1 class="forge-text">Forge</h1>
+        <div class="flex justify-between items-center mb-8">
+            <div class="forge-logo">
+                <!-- Inline SVG matching your image -->
+                <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="19" cy="11" r="7" fill="#67e8f9" filter="url(#glow)"/>
+                    <defs>
+                        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                            <feGaussianBlur in="SourceGraphic" stdDeviation="3"/>
+                        </filter>
+                    </defs>
+                </svg>
+                <h1 style="font-size: 2.95rem; font-weight: 700; letter-spacing: -0.03em; background: linear-gradient(90deg, #67e8f9, #e0f2fe); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    Forge
+                </h1>
+            </div>
+            <div class="text-right">
+                <div id="streakDisplay" class="text-4xl font-bold text-orange-400">0 🔥</div>
+                <div class="text-xs text-zinc-500">STREAK</div>
+            </div>
         </div>
 
-        <div class="glass rounded-3xl p-6 mb-8 flex items-center justify-between">
-            <div class="text-center flex-1">
-                <div id="fighterLevel" class="text-xl font-bold text-amber-400">Rookie</div>
-                <div class="text-xs text-zinc-400 mt-1">LEVEL</div>
-            </div>
-            <div class="h-9 w-px bg-zinc-700"></div>
-            <div class="text-center flex-1">
-                <div id="weeklyLoss" class="text-xl font-bold text-emerald-400">— kg</div>
-                <div class="text-xs text-zinc-400 mt-1">THIS WEEK</div>
+        <div class="glass rounded-3xl p-6 mb-8">
+            <div class="grid grid-cols-2 gap-6 text-center">
+                <div>
+                    <div id="dashBMI" class="mainValue text-cyan-400">—</div>
+                    <div class="text-xs text-zinc-400">CURRENT BMI</div>
+                </div>
+                <div>
+                    <div id="startBMI" class="mainValue text-amber-400">—</div>
+                    <div class="text-xs text-zinc-400">START BMI</div>
+                </div>
             </div>
         </div>
 
@@ -97,9 +88,10 @@
         </button>
     </div>
 
-    <!-- LOG (compact) -->
+    <!-- LOG (compact, saves correctly) -->
     <div id="log" class="screen p-5 max-w-lg mx-auto hidden" style="max-height: calc(100vh - 110px); overflow-y: auto;">
         <h2 class="text-3xl font-bold mb-6 text-cyan-400">Today’s Log</h2>
+        
         <div class="glass rounded-3xl p-6 space-y-6">
             <div>
                 <label class="block text-xs text-zinc-400 mb-1.5">DATE</label>
