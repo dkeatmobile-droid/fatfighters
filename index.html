@@ -25,17 +25,24 @@
         }
         .nav-btn.active { color: #67e8f9; border-bottom: 3px solid #67e8f9; }
         .mainValue { font-size: 2.85rem; line-height: 1; font-weight: 700; letter-spacing: -0.02em; }
-        .highlight-red { color: #f87171; animation: pulse 2s infinite; }
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.75; } }
+        .forge-title {
+            font-size: 2.75rem;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            background: linear-gradient(90deg, #67e8f9, #a5f3fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
         .btn-primary {
             background: linear-gradient(90deg, #67e8f9, #22d3ee);
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .btn-primary:active { transform: scale(0.96); }
-        /* Compact inputs */
+        /* Compact & clean inputs */
         input[type="date"], input[type="number"], input[type="text"] {
             height: 50px;
             font-size: 1.05rem;
+            padding: 0 1.25rem;
         }
         .comparison-slider { position: relative; overflow: hidden; height: 420px; border-radius: 1.5rem; }
         .comparison-slider img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; }
@@ -51,7 +58,7 @@
     <div id="dashboard" class="screen p-6 max-w-lg mx-auto">
         <div class="flex justify-between items-start mb-8">
             <div>
-                <h1 class="text-4xl font-bold tracking-tighter text-cyan-400">Forge</h1>
+                <h1 class="forge-title">Forge</h1>
                 <p class="text-zinc-400 mt-1">Hi, <span id="dashName" class="font-semibold text-white">Warrior</span> 👊</p>
             </div>
             <div class="text-right">
@@ -157,7 +164,7 @@
         </div>
     </div>
 
-    <!-- GRAPHS -->
+    <!-- GRAPHS, PHOTOS, PROFILE (same clean structure as before) -->
     <div id="graphs" class="screen p-6 max-w-lg mx-auto hidden">
         <h2 class="text-3xl font-bold mb-6 text-cyan-400 tracking-tight">Your Progress</h2>
         <div class="glass rounded-3xl p-6">
@@ -165,7 +172,6 @@
         </div>
     </div>
 
-    <!-- PHOTOS -->
     <div id="photos" class="screen p-6 max-w-lg mx-auto hidden">
         <h2 class="text-3xl font-bold mb-2 text-cyan-400 tracking-tight">Visual Progress</h2>
         <p class="text-zinc-400 mb-6">Watch your transformation unfold</p>
@@ -177,7 +183,6 @@
         </div>
     </div>
 
-    <!-- PROFILE -->
     <div id="profile" class="screen p-6 max-w-lg mx-auto hidden">
         <h2 class="text-3xl font-bold mb-6 text-cyan-400 tracking-tight">Your Profile</h2>
         <div class="glass rounded-3xl p-6 space-y-7">
@@ -229,6 +234,7 @@
     </div>
 
     <script>
+        // JavaScript (unchanged core logic, updated storage keys for "Forge")
         let entries = JSON.parse(localStorage.getItem("forgeEntries") || "[]");
         let profile = JSON.parse(localStorage.getItem("forgeProfile") || {});
         let chartInstance = null;
