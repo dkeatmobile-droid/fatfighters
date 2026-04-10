@@ -14,264 +14,245 @@
 
     <style>
         body { 
-            font-family: system-ui, sans-serif; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
             -webkit-tap-highlight-color: transparent;
         }
         .glass { 
-            background: rgba(255,255,255,0.08); 
-            backdrop-filter: blur(12px); 
-            border: 1px solid rgba(255,255,255,0.15); 
+            background: rgba(30, 30, 40, 0.75); 
+            backdrop-filter: blur(20px); 
+            border: 1px solid rgba(255,255,255,0.12); 
+            box-shadow: 0 8px 32px -12px rgba(0, 0, 0, 0.4);
         }
         .nav-btn.active { 
-            color: #22d3ee; 
-            border-bottom: 3px solid #22d3ee; 
+            color: #67e8f9; 
+            border-bottom: 3px solid #67e8f9; 
         }
         .mainValue { 
-            font-size: 2.75rem; 
+            font-size: 2.85rem; 
             line-height: 1; 
             font-weight: 700; 
+            letter-spacing: -0.02em;
         }
         .highlight-red { 
-            color: #ef4444; 
+            color: #f87171; 
             animation: pulse 2s infinite; 
         }
         @keyframes pulse { 
             0%,100% { opacity: 1; } 
-            50% { opacity: 0.7; } 
+            50% { opacity: 0.75; } 
         }
-        .photo-grid img { 
-            transition: transform 0.3s ease; 
+        .btn-primary {
+            background: linear-gradient(90deg, #67e8f9, #22d3ee);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .photo-grid img:hover { 
-            transform: scale(1.05); 
+        .btn-primary:active {
+            transform: scale(0.96);
         }
         .comparison-slider { 
             position: relative; 
             overflow: hidden; 
             height: 420px; 
+            border-radius: 1.5rem;
         }
         .comparison-slider img { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; 
-            position: absolute; 
-            top: 0; 
+            width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; 
         }
         .slider-handle {
-            position: absolute; 
-            top: 0; 
-            bottom: 0; 
-            width: 4px; 
-            background: white;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5); 
-            cursor: ew-resize; 
-            z-index: 10;
-        }
-        /* Extra compact log screen */
-        #log .glass {
-            padding: 1.25rem;
-        }
-        #log input, #log button {
-            padding: 0.75rem 1rem;
-            font-size: 1rem;
+            position: absolute; top: 0; bottom: 0; width: 5px; background: white;
+            box-shadow: 0 0 15px rgba(0,0,0,0.6); cursor: ew-resize; z-index: 10;
         }
     </style>
 </head>
 <body class="bg-zinc-950 text-white min-h-screen pb-24">
 
-    <!-- DASHBOARD / HOME -->
+    <!-- DASHBOARD -->
     <div id="dashboard" class="screen p-6 max-w-lg mx-auto">
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex justify-between items-start mb-8">
             <div>
-                <h1 class="text-4xl font-bold text-cyan-400">Fat Fighters</h1>
-                <p class="text-zinc-400">Hi, <span id="dashName" class="font-semibold text-white">Warrior</span> 👊</p>
+                <h1 class="text-4xl font-bold tracking-tighter text-cyan-400">Fat Fighters</h1>
+                <p class="text-zinc-400 mt-1">Hi, <span id="dashName" class="font-semibold text-white">Warrior</span> 👊</p>
             </div>
             <div class="text-right">
-                <div id="streakDisplay" class="text-3xl font-bold text-orange-400">0 🔥</div>
-                <div class="text-xs text-zinc-500">day streak</div>
+                <div id="streakDisplay" class="text-4xl font-bold text-orange-400">0 🔥</div>
+                <div class="text-xs tracking-widest text-zinc-500 uppercase">streak</div>
             </div>
         </div>
 
-        <div class="glass rounded-3xl p-5 mb-6 flex items-center gap-4">
-            <div class="flex-1 text-center">
-                <div id="fighterLevel" class="text-lg font-bold text-yellow-400">Rookie</div>
-                <div class="text-xs text-zinc-400">Fighter Level</div>
+        <div class="glass rounded-3xl p-6 mb-8 flex items-center justify-between">
+            <div class="text-center flex-1">
+                <div id="fighterLevel" class="text-xl font-bold text-amber-400">Rookie</div>
+                <div class="text-xs text-zinc-400 mt-1">LEVEL</div>
             </div>
-            <div class="h-12 w-px bg-zinc-700"></div>
-            <div class="flex-1 text-center">
-                <div id="weeklyLoss" class="text-lg font-bold text-emerald-400">— kg</div>
-                <div class="text-xs text-zinc-400">This week</div>
+            <div class="h-9 w-px bg-zinc-700"></div>
+            <div class="text-center flex-1">
+                <div id="weeklyLoss" class="text-xl font-bold text-emerald-400">— kg</div>
+                <div class="text-xs text-zinc-400 mt-1">THIS WEEK</div>
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 mb-8">
+        <div class="grid grid-cols-2 gap-4">
             <div class="glass rounded-3xl p-6 text-center">
-                <p class="text-sm text-zinc-400">Weight</p>
-                <div id="dashWeight" class="mainValue text-white">—</div>
-                <p class="text-xs text-emerald-400">kg</p>
+                <p class="text-sm text-zinc-400 mb-1">Weight</p>
+                <div id="dashWeight" class="mainValue">—</div>
+                <p class="text-emerald-400 text-sm">kg</p>
             </div>
             <div class="glass rounded-3xl p-6 text-center">
-                <p class="text-sm text-zinc-400">BMI</p>
-                <div id="dashBMI" class="mainValue text-white">—</div>
+                <p class="text-sm text-zinc-400 mb-1">BMI</p>
+                <div id="dashBMI" class="mainValue">—</div>
             </div>
             <div class="glass rounded-3xl p-6 text-center">
-                <p class="text-sm text-zinc-400">Waist</p>
-                <div id="dashWaist" class="mainValue text-white">—</div>
-                <p class="text-xs text-amber-400">cm</p>
+                <p class="text-sm text-zinc-400 mb-1">Waist</p>
+                <div id="dashWaist" class="mainValue">—</div>
+                <p class="text-amber-400 text-sm">cm</p>
             </div>
             <div class="glass rounded-3xl p-6 text-center">
-                <p class="text-sm text-zinc-400">Next Injection</p>
-                <div id="dashNextInjection" class="mainValue text-white">—</div>
-                <p id="dashNextLabel" class="text-xs"></p>
+                <p class="text-sm text-zinc-400 mb-1">Next Injection</p>
+                <div id="dashNextInjection" class="mainValue">—</div>
+                <p id="dashNextLabel" class="text-xs mt-1"></p>
             </div>
         </div>
 
         <button onclick="showScreen('log')" 
-                class="w-full bg-gradient-to-r from-cyan-400 to-emerald-400 hover:brightness-110 transition text-zinc-950 font-bold py-5 rounded-3xl text-xl shadow-lg">
-            📝 Log Today + Injection
+                class="btn-primary w-full mt-10 text-zinc-950 font-semibold py-5 rounded-3xl text-xl shadow-xl">
+            Log Today’s Progress
         </button>
     </div>
 
-    <!-- LOG (Compact version - no nutrition) -->
-    <div id="log" class="screen p-5 max-w-lg mx-auto hidden overflow-auto" style="max-height: calc(100vh - 100px);">
-        <h2 class="text-3xl font-bold mb-5 text-cyan-400">Today's Battle Log</h2>
+    <!-- LOG (Compact & Premium) -->
+    <div id="log" class="screen p-5 max-w-lg mx-auto hidden" style="max-height: calc(100vh - 110px); overflow-y: auto;">
+        <h2 class="text-3xl font-bold mb-6 text-cyan-400 tracking-tight">Today’s Log</h2>
         
-        <div class="glass rounded-3xl p-5 space-y-6">
+        <div class="glass rounded-3xl p-6 space-y-6">
             <div>
-                <label class="block text-sm text-zinc-400 mb-1">Date</label>
-                <input id="logDate" type="date" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-white">
+                <label class="block text-xs text-zinc-400 mb-1.5">DATE</label>
+                <input id="logDate" type="date" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-white text-base">
             </div>
 
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm text-zinc-400 mb-1">Weight (kg)</label>
-                    <input id="logWeight" type="number" step="0.1" placeholder="e.g. 92.5" 
-                           class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-white">
+                    <label class="block text-xs text-zinc-400 mb-1.5">WEIGHT (kg)</label>
+                    <input id="logWeight" type="number" step="0.1" placeholder="92.5" 
+                           class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-white text-base">
                 </div>
                 <div>
-                    <label class="block text-sm text-zinc-400 mb-1">Waist (cm)</label>
-                    <input id="logWaist" type="number" step="0.1" placeholder="e.g. 105" 
-                           class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-white">
+                    <label class="block text-xs text-zinc-400 mb-1.5">WAIST (cm)</label>
+                    <input id="logWaist" type="number" step="0.1" placeholder="105" 
+                           class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-white text-base">
                 </div>
             </div>
 
-            <!-- Injection -->
             <div class="pt-4 border-t border-zinc-700">
-                <p class="text-sm text-zinc-400 mb-3">Injection</p>
+                <p class="text-xs text-zinc-400 mb-3">INJECTION</p>
                 <div class="flex flex-wrap gap-2">
-                    <button onclick="selectSite(this)" data-site="Abdomen-Left" class="site-btn px-4 py-2 bg-zinc-800 rounded-2xl text-sm">Abd L</button>
-                    <button onclick="selectSite(this)" data-site="Abdomen-Right" class="site-btn px-4 py-2 bg-zinc-800 rounded-2xl text-sm">Abd R</button>
-                    <button onclick="selectSite(this)" data-site="Thigh-Left" class="site-btn px-4 py-2 bg-zinc-800 rounded-2xl text-sm">Thigh L</button>
-                    <button onclick="selectSite(this)" data-site="Thigh-Right" class="site-btn px-4 py-2 bg-zinc-800 rounded-2xl text-sm">Thigh R</button>
-                    <button onclick="selectSite(this)" data-site="Arm-Left" class="site-btn px-4 py-2 bg-zinc-800 rounded-2xl text-sm">Arm L</button>
-                    <button onclick="selectSite(this)" data-site="Arm-Right" class="site-btn px-4 py-2 bg-zinc-800 rounded-2xl text-sm">Arm R</button>
+                    <button onclick="selectSite(this)" data-site="Abdomen-Left" class="site-btn px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-sm transition">Abd L</button>
+                    <button onclick="selectSite(this)" data-site="Abdomen-Right" class="site-btn px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-sm transition">Abd R</button>
+                    <button onclick="selectSite(this)" data-site="Thigh-Left" class="site-btn px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-sm transition">Thigh L</button>
+                    <button onclick="selectSite(this)" data-site="Thigh-Right" class="site-btn px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-sm transition">Thigh R</button>
+                    <button onclick="selectSite(this)" data-site="Arm-Left" class="site-btn px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-sm transition">Arm L</button>
+                    <button onclick="selectSite(this)" data-site="Arm-Right" class="site-btn px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-sm transition">Arm R</button>
                 </div>
                 <input id="logDose" type="number" step="0.1" placeholder="Dose (mg)" 
-                       class="mt-4 w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-white">
+                       class="mt-5 w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-white text-base">
             </div>
 
-            <!-- Side Effects -->
             <div class="pt-4 border-t border-zinc-700">
-                <p class="text-sm text-zinc-400 mb-3">Side Effects (tap to select)</p>
+                <p class="text-xs text-zinc-400 mb-3">SIDE EFFECTS (tap to mark)</p>
                 <div id="sideEffectsContainer" class="grid grid-cols-2 gap-2 text-sm"></div>
             </div>
 
-            <!-- Progress Photo -->
             <div class="pt-4 border-t border-zinc-700">
-                <p class="text-sm text-zinc-400 mb-2">Progress Photo (optional)</p>
+                <p class="text-xs text-zinc-400 mb-2">PROGRESS PHOTO</p>
                 <input id="photoInput" type="file" accept="image/*" class="hidden" onchange="handlePhoto(this)">
                 <button onclick="document.getElementById('photoInput').click()" 
-                        class="w-full border border-dashed border-zinc-600 py-6 rounded-3xl text-zinc-400 hover:text-white transition text-sm">
-                    📸 Tap to add photo
+                        class="w-full border border-dashed border-zinc-600 py-7 rounded-3xl text-zinc-400 hover:text-white transition flex flex-col items-center gap-2">
+                    <span class="text-2xl">📸</span>
+                    <span class="text-sm">Tap to add photo</span>
                 </button>
-                <div id="photoPreview" class="mt-3 hidden rounded-2xl overflow-hidden">
+                <div id="photoPreview" class="mt-4 hidden rounded-2xl overflow-hidden border border-zinc-700">
                     <img id="previewImg" class="w-full">
                 </div>
             </div>
 
             <button onclick="saveLogEntry()" 
-                    class="w-full bg-emerald-500 hover:bg-emerald-400 transition py-4 rounded-3xl font-bold text-lg mt-2">
-                Save Log Entry
+                    class="btn-primary w-full py-5 rounded-3xl font-semibold text-lg mt-4 text-zinc-950">
+                Save Entry
             </button>
         </div>
     </div>
 
-    <!-- GRAPHS, PHOTOS, PROFILE screens remain the same as previous version -->
-    <!-- (GRAPHS) -->
+    <!-- GRAPHS -->
     <div id="graphs" class="screen p-6 max-w-lg mx-auto hidden">
-        <h2 class="text-3xl font-bold mb-6 text-cyan-400">Progress Arena</h2>
+        <h2 class="text-3xl font-bold mb-6 text-cyan-400 tracking-tight">Your Progress</h2>
         <div class="glass rounded-3xl p-6">
-            <canvas id="progressChart" height="280"></canvas>
+            <canvas id="progressChart" height="290"></canvas>
         </div>
     </div>
 
     <!-- PHOTOS -->
     <div id="photos" class="screen p-6 max-w-lg mx-auto hidden">
-        <h2 class="text-3xl font-bold mb-2 text-cyan-400">Visual Progress</h2>
-        <p class="text-zinc-400 mb-6">Your transformation battle log 📸</p>
+        <h2 class="text-3xl font-bold mb-2 text-cyan-400 tracking-tight">Visual Progress</h2>
+        <p class="text-zinc-400 mb-6">Watch your transformation unfold</p>
         <div id="photoGallery" class="photo-grid grid grid-cols-2 gap-4"></div>
-        <div id="noPhotos" class="text-center py-12 text-zinc-500 hidden">
-            <p class="text-6xl mb-4">📸</p>
-            <p>No photos yet.<br>Upload your first one in Log.</p>
+        <div id="noPhotos" class="text-center py-20 text-zinc-500 hidden">
+            <p class="text-7xl mb-4 opacity-50">📸</p>
+            <p class="text-lg">No photos yet</p>
+            <p class="text-sm mt-2">Add one from the Log screen</p>
         </div>
     </div>
 
     <!-- PROFILE -->
     <div id="profile" class="screen p-6 max-w-lg mx-auto hidden">
-        <h2 class="text-3xl font-bold mb-6 text-cyan-400">Fighter Profile</h2>
-        <div class="glass rounded-3xl p-6 space-y-6">
+        <h2 class="text-3xl font-bold mb-6 text-cyan-400 tracking-tight">Your Profile</h2>
+        <div class="glass rounded-3xl p-6 space-y-7">
             <div>
-                <label class="block text-sm text-zinc-400 mb-1">Name</label>
-                <input id="profileName" type="text" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-white">
+                <label class="block text-xs text-zinc-400 mb-1.5">NAME</label>
+                <input id="profileName" type="text" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-white">
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm text-zinc-400 mb-1">Height (cm)</label>
-                    <input id="profileHeight" type="number" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-white">
+                    <label class="block text-xs text-zinc-400 mb-1.5">HEIGHT (cm)</label>
+                    <input id="profileHeight" type="number" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-white">
                 </div>
                 <div>
-                    <label class="block text-sm text-zinc-400 mb-1">Usual Dose (mg)</label>
-                    <input id="profileUsualDose" type="number" step="0.1" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-white">
+                    <label class="block text-xs text-zinc-400 mb-1.5">USUAL DOSE (mg)</label>
+                    <input id="profileUsualDose" type="number" step="0.1" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-white">
                 </div>
             </div>
             <div>
-                <label class="block text-sm text-zinc-400 mb-1">Next Injection Date</label>
-                <input id="profileNextInjection" type="date" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-4 py-3 text-white">
+                <label class="block text-xs text-zinc-400 mb-1.5">NEXT INJECTION DATE</label>
+                <input id="profileNextInjection" type="date" class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-4 text-white">
             </div>
             <button onclick="saveProfile()" 
-                    class="w-full bg-cyan-400 hover:bg-cyan-300 transition text-zinc-950 font-bold py-4 rounded-2xl">
+                    class="btn-primary w-full py-5 rounded-3xl font-semibold text-lg text-zinc-950">
                 Save Profile
             </button>
         </div>
     </div>
 
     <!-- BOTTOM NAV -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-zinc-900 border-t border-zinc-800 max-w-lg mx-auto">
+    <nav class="fixed bottom-0 left-0 right-0 bg-zinc-900/95 backdrop-blur-xl border-t border-zinc-800 max-w-lg mx-auto">
         <div class="flex text-xs">
-            <button onclick="showScreen('dashboard')" class="nav-btn active flex-1 py-4 flex flex-col items-center">🏠<br>Home</button>
-            <button onclick="showScreen('log')" class="nav-btn flex-1 py-4 flex flex-col items-center">📝<br>Log</button>
-            <button onclick="showScreen('graphs')" class="nav-btn flex-1 py-4 flex flex-col items-center">📈<br>Graphs</button>
-            <button onclick="showScreen('photos')" class="nav-btn flex-1 py-4 flex flex-col items-center">📸<br>Photos</button>
-            <button onclick="showScreen('profile')" class="nav-btn flex-1 py-4 flex flex-col items-center">👤<br>Profile</button>
+            <button onclick="showScreen('dashboard')" class="nav-btn active flex-1 py-4 flex flex-col items-center gap-0.5">🏠<br><span class="text-[10px]">Home</span></button>
+            <button onclick="showScreen('log')" class="nav-btn flex-1 py-4 flex flex-col items-center gap-0.5">📝<br><span class="text-[10px]">Log</span></button>
+            <button onclick="showScreen('graphs')" class="nav-btn flex-1 py-4 flex flex-col items-center gap-0.5">📈<br><span class="text-[10px]">Graphs</span></button>
+            <button onclick="showScreen('photos')" class="nav-btn flex-1 py-4 flex flex-col items-center gap-0.5">📸<br><span class="text-[10px]">Photos</span></button>
+            <button onclick="showScreen('profile')" class="nav-btn flex-1 py-4 flex flex-col items-center gap-0.5">👤<br><span class="text-[10px]">Profile</span></button>
         </div>
     </nav>
 
     <!-- Comparison Modal -->
-    <div id="comparisonModal" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+    <div id="comparisonModal" class="hidden fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
         <div class="max-w-lg w-full">
-            <div class="flex justify-between mb-4">
+            <div class="flex justify-between items-center mb-4 px-1">
                 <h3 class="text-xl font-semibold">Before vs After</h3>
-                <button onclick="closeComparison()" class="text-3xl leading-none">×</button>
+                <button onclick="closeComparison()" class="text-4xl text-zinc-400 hover:text-white">×</button>
             </div>
-            <div id="comparisonContainer" class="comparison-slider rounded-3xl overflow-hidden shadow-2xl"></div>
-            <p class="text-center text-xs text-zinc-500 mt-4">Drag the white line to compare</p>
+            <div id="comparisonContainer" class="comparison-slider shadow-2xl"></div>
+            <p class="text-center text-xs text-zinc-500 mt-5">Drag the line to compare</p>
         </div>
     </div>
 
     <script>
-        // === All JavaScript remains the same as the previous fully working version ===
-        // (I kept the exact same script block from the last complete version for consistency)
-
         let entries = JSON.parse(localStorage.getItem("fatfightersEntries") || "[]");
         let profile = JSON.parse(localStorage.getItem("fatfightersProfile") || {});
         let chartInstance = null;
@@ -283,9 +264,8 @@
             document.getElementById(id).classList.remove('hidden');
 
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            const activeBtn = Array.from(document.querySelectorAll('.nav-btn')).find(b => 
-                b.getAttribute('onclick').includes(`'${id}'`));
-            if (activeBtn) activeBtn.classList.add('active');
+            const btn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.getAttribute('onclick').includes(`'${id}'`));
+            if (btn) btn.classList.add('active');
 
             if (id === 'graphs') renderChart();
             if (id === 'dashboard') loadDashboard();
@@ -295,11 +275,10 @@
 
         function calculateStreak() {
             if (entries.length === 0) return 0;
-            const uniqueDates = [...new Set(entries.map(e => e.date))].sort().reverse();
+            const dates = [...new Set(entries.map(e => e.date))].sort().reverse();
             let streak = 1;
-            for (let i = 1; i < uniqueDates.length; i++) {
-                const diff = (new Date(uniqueDates[i-1]) - new Date(uniqueDates[i])) / 86400000;
-                if (diff === 1) streak++;
+            for (let i = 1; i < dates.length; i++) {
+                if ((new Date(dates[i-1]) - new Date(dates[i])) / 86400000 === 1) streak++;
                 else break;
             }
             return streak;
@@ -314,7 +293,6 @@
 
         function loadDashboard() {
             document.getElementById('dashName').textContent = profile.name || "Warrior";
-
             const latest = entries[0] || {};
             document.getElementById('dashWeight').textContent = latest.weight || "—";
             document.getElementById('dashWaist').textContent = latest.waist || "—";
@@ -327,7 +305,7 @@
             }
 
             const streak = calculateStreak();
-            document.getElementById('streakDisplay').innerHTML = `${streak} <span class="text-xl">🔥</span>`;
+            document.getElementById('streakDisplay').innerHTML = `${streak} <span class="text-2xl">🔥</span>`;
             document.getElementById('fighterLevel').textContent = getFighterLevel(streak);
 
             const nextEl = document.getElementById('dashNextInjection');
@@ -354,9 +332,9 @@
             currentPhoto = null;
 
             const container = document.getElementById('sideEffectsContainer');
-            container.innerHTML = ["Nausea", "Fatigue", "Constipation", "Diarrhea", "Headache"].map(se => `
-                <div onclick="this.classList.toggle('bg-red-500'); this.classList.toggle('text-white')" 
-                     class="side-effect px-4 py-3 bg-zinc-800 rounded-2xl text-center cursor-pointer transition">
+            container.innerHTML = ["Nausea","Fatigue","Constipation","Diarrhea","Headache"].map(se => `
+                <div onclick="this.classList.toggle('bg-red-500');this.classList.toggle('text-white')" 
+                     class="side-effect px-5 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-2xl text-center cursor-pointer transition text-sm">
                     ${se}
                 </div>
             `).join('');
@@ -365,7 +343,7 @@
         function handlePhoto(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
-                reader.onload = (e) => {
+                reader.onload = e => {
                     currentPhoto = e.target.result;
                     document.getElementById('previewImg').src = currentPhoto;
                     document.getElementById('photoPreview').classList.remove('hidden');
@@ -376,7 +354,7 @@
 
         function saveLogEntry() {
             const entry = {
-                date: document.getElementById('logDate').value || new Date().toISOString().split('T')[0],
+                date: document.getElementById('logDate').value,
                 weight: parseFloat(document.getElementById('logWeight').value),
                 waist: parseFloat(document.getElementById('logWaist').value),
                 dose: parseFloat(document.getElementById('logDose').value),
@@ -386,7 +364,7 @@
             };
 
             if (!entry.weight && !entry.waist && !entry.dose) {
-                alert("Please enter at least weight, waist, or dose.");
+                alert("Please add at least weight, waist or injection dose.");
                 return;
             }
 
@@ -394,18 +372,15 @@
             localStorage.setItem("fatfightersEntries", JSON.stringify(entries));
 
             if (entry.dose && profile.nextInjection) {
-                let nextDate = new Date(profile.nextInjection);
-                nextDate.setDate(nextDate.getDate() + 7);
-                profile.nextInjection = nextDate.toISOString().split('T')[0];
+                let d = new Date(profile.nextInjection);
+                d.setDate(d.getDate() + 7);
+                profile.nextInjection = d.toISOString().split('T')[0];
                 localStorage.setItem("fatfightersProfile", JSON.stringify(profile));
             }
 
-            const streak = calculateStreak();
-            if (streak % 7 === 0 && streak > 0) {
-                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-            }
+            if (calculateStreak() % 7 === 0) confetti({particleCount: 180, spread: 80, origin: { y: 0.6 }});
 
-            alert("✅ Entry saved!");
+            alert("✅ Saved successfully!");
             loadDashboard();
             showScreen('dashboard');
         }
@@ -417,7 +392,7 @@
             profile.nextInjection = document.getElementById('profileNextInjection').value;
 
             localStorage.setItem("fatfightersProfile", JSON.stringify(profile));
-            alert("✅ Profile saved!");
+            alert("✅ Profile updated");
             loadDashboard();
         }
 
@@ -430,17 +405,18 @@
                 data: {
                     labels: sorted.map(e => e.date),
                     datasets: [
-                        { label: 'Weight (kg)', data: sorted.map(e => e.weight), borderColor: '#22d3ee', tension: 0.3, borderWidth: 3 },
-                        { label: 'Waist (cm)', data: sorted.map(e => e.waist), borderColor: '#fbbf24', tension: 0.3, borderWidth: 3 },
-                        { label: 'Dose (mg)', data: sorted.map(e => e.dose), borderColor: '#c084fc', tension: 0.3, borderWidth: 3, yAxisID: 'y1' }
+                        { label: 'Weight kg', data: sorted.map(e => e.weight), borderColor: '#67e8f9', tension: 0.35, borderWidth: 4 },
+                        { label: 'Waist cm', data: sorted.map(e => e.waist), borderColor: '#fbbf24', tension: 0.35, borderWidth: 4 },
+                        { label: 'Dose mg', data: sorted.map(e => e.dose), borderColor: '#c4b5fd', tension: 0.35, borderWidth: 4, yAxisID: 'y1' }
                     ]
                 },
                 options: {
+                    responsive: true,
                     scales: {
-                        y: { grid: { color: '#27272a' } },
-                        y1: { position: 'right', grid: { color: '#27272a' }, min: 0 }
+                        y: { grid: { color: '#27272a' }, ticks: { color: '#71717a' } },
+                        y1: { position: 'right', grid: { color: '#27272a' }, ticks: { color: '#71717a' }, min: 0 }
                     },
-                    plugins: { legend: { labels: { color: '#d1d5db' } } }
+                    plugins: { legend: { labels: { color: '#d1d5db', boxWidth: 12 } } }
                 }
             });
         }
@@ -450,7 +426,7 @@
             const noPhotos = document.getElementById('noPhotos');
             container.innerHTML = '';
 
-            const photos = entries.filter(e => e.photo).sort((a, b) => new Date(b.date) - new Date(a.date));
+            const photos = entries.filter(e => e.photo).sort((a,b) => new Date(b.date) - new Date(a.date));
 
             if (photos.length === 0) {
                 noPhotos.classList.remove('hidden');
@@ -458,55 +434,53 @@
             }
             noPhotos.classList.add('hidden');
 
-            photos.forEach((entry, index) => {
+            photos.forEach((entry, i) => {
                 const div = document.createElement('div');
-                div.className = "glass rounded-3xl overflow-hidden cursor-pointer";
+                div.className = "glass rounded-3xl overflow-hidden cursor-pointer shadow-inner";
                 div.innerHTML = `
-                    <img src="${entry.photo}" class="w-full h-56 object-cover">
-                    <div class="p-3 text-xs">
+                    <img src="${entry.photo}" class="w-full h-60 object-cover">
+                    <div class="p-4 text-xs">
                         <div class="font-medium">${entry.date}</div>
-                        <div class="text-zinc-400">
-                            ${entry.weight ? entry.weight + ' kg' : ''} ${entry.waist ? '• ' + entry.waist + ' cm' : ''}
-                        </div>
+                        <div class="text-zinc-400">${entry.weight ? entry.weight+' kg' : ''} ${entry.waist ? '• '+entry.waist+' cm' : ''}</div>
                     </div>
                 `;
-                div.onclick = () => openComparisonModal(index);
+                div.onclick = () => openComparisonModal(i);
                 container.appendChild(div);
             });
         }
 
         function openComparisonModal(startIndex) {
-            const photos = entries.filter(e => e.photo).sort((a, b) => new Date(b.date) - new Date(a.date));
+            const photos = entries.filter(e => e.photo).sort((a,b) => new Date(b.date) - new Date(a.date));
             const pair = [photos[startIndex], photos[(startIndex + 1) % photos.length] || photos[startIndex]];
 
             const container = document.getElementById('comparisonContainer');
             container.innerHTML = `
-                <img src="${pair[0].photo}" style="height:100%; width:100%; object-fit:cover;">
-                <img id="afterImg" src="${pair[1].photo}" style="height:100%; width:100%; object-fit:cover; clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);">
+                <img src="${pair[0].photo}" style="height:100%;width:100%;object-fit:cover;">
+                <img id="afterImg" src="${pair[1].photo}" style="height:100%;width:100%;object-fit:cover;clip-path:polygon(50% 0,100% 0,100% 100%,50% 100%);">
                 <div id="sliderHandle" class="slider-handle" style="left:50%;"></div>
             `;
 
             document.getElementById('comparisonModal').classList.remove('hidden');
 
-            const handle = document.getElementById('sliderHandle');
-            const afterImg = document.getElementById('afterImg');
             let dragging = false;
+            const handle = document.getElementById('sliderHandle');
+            const after = document.getElementById('afterImg');
 
-            const moveSlider = (e) => {
+            const move = (e) => {
                 if (!dragging) return;
                 const rect = container.getBoundingClientRect();
-                let percent = ((e.clientX || (e.touches && e.touches[0].clientX)) - rect.left) / rect.width * 100;
-                percent = Math.max(0, Math.min(100, percent));
-                afterImg.style.clipPath = `polygon(${percent}% 0, 100% 0, 100% 100%, ${percent}% 100%)`;
-                handle.style.left = `${percent}%`;
+                let pct = ((e.clientX || (e.touches && e.touches[0].clientX)) - rect.left) / rect.width * 100;
+                pct = Math.max(0, Math.min(100, pct));
+                after.style.clipPath = `polygon(${pct}% 0, 100% 0, 100% 100%, ${pct}% 100%)`;
+                handle.style.left = `${pct}%`;
             };
 
             handle.addEventListener('mousedown', () => dragging = true);
             handle.addEventListener('touchstart', () => dragging = true);
             document.addEventListener('mouseup', () => dragging = false);
             document.addEventListener('touchend', () => dragging = false);
-            document.addEventListener('mousemove', moveSlider);
-            document.addEventListener('touchmove', moveSlider);
+            document.addEventListener('mousemove', move);
+            document.addEventListener('touchmove', move);
         }
 
         function closeComparison() {
