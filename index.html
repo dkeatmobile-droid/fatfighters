@@ -11,7 +11,7 @@
 
 <style>
 body { font-family: system-ui; }
-.glass { background: rgba(30,30,40,0.85); backdrop-filter: blur(20px); }
+.glass { background: rgba(30,30,40,0.85); backdrop-filter: blur(20px); border:1px solid rgba(255,255,255,0.08); }
 .nav-btn.active { color:#67e8f9; border-bottom:3px solid #67e8f9; }
 .mainValue { font-size:2.5rem; font-weight:700; }
 </style>
@@ -23,27 +23,34 @@ body { font-family: system-ui; }
 <div id="dashboard" class="screen p-6 max-w-lg mx-auto">
 <h1 class="text-3xl font-bold text-cyan-400 mb-4">Forge</h1>
 
+<!-- UNIT SELECTOR -->
+<select id="unitSelect" onchange="changeUnits()" class="bg-zinc-800 p-2 rounded mb-4">
+  <option value="kg">Kg</option>
+  <option value="lbs">Lbs</option>
+  <option value="stone">Stone</option>
+</select>
+
 <div class="mb-6">
-<div id="streakDisplay" class="text-3xl text-orange-400">0 🔥</div>
+  <div id="streakDisplay" class="text-3xl text-orange-400">0 🔥</div>
 </div>
 
 <div class="grid grid-cols-2 gap-4">
-<div class="glass p-4 rounded-xl text-center">
-<p>Weight</p>
-<div id="dashWeight" class="mainValue">—</div>
-</div>
-<div class="glass p-4 rounded-xl text-center">
-<p>Waist</p>
-<div id="dashWaist" class="mainValue">—</div>
-</div>
+  <div class="glass p-4 rounded-xl text-center">
+    <p>Weight</p>
+    <div id="dashWeight" class="mainValue">—</div>
+  </div>
+  <div class="glass p-4 rounded-xl text-center">
+    <p>Waist</p>
+    <div id="dashWaist" class="mainValue">—</div>
+  </div>
 </div>
 
 <button onclick="showScreen('log')" class="mt-6 w-full bg-cyan-400 text-black py-4 rounded-xl">
-Log Progress
+  Log Progress
 </button>
 </div>
 
-<!-- LOG -->
+<!-- LOG SCREEN -->
 <div id="log" class="screen hidden p-6 max-w-lg mx-auto">
 <h2 class="text-2xl mb-4">Log Entry</h2>
 
@@ -56,7 +63,7 @@ Log Progress
 <input id="photoInput" type="file" accept="image/*" onchange="handlePhoto(this)">
 
 <button onclick="saveLogEntry()" class="mt-4 w-full bg-cyan-400 text-black py-3 rounded">
-Save
+  Save
 </button>
 </div>
 
@@ -67,150 +74,188 @@ Save
 
 <!-- NAV -->
 <nav class="fixed bottom-0 left-0 right-0 bg-zinc-900 flex">
-<button onclick="showScreen('dashboard')" class="nav-btn flex-1 p-3 active">Home</button>
-<button onclick="showScreen('log')" class="nav-btn flex-1 p-3">Log</button>
-<button onclick="showScreen('graphs')" class="nav-btn flex-1 p-3">Graph</button>
+  <button onclick="showScreen('dashboard')" class="nav-btn flex-1 p-3 active">Home</button>
+  <button onclick="showScreen('log')" class="nav-btn flex-1 p-3">Log</button>
+  <button onclick="showScreen('graphs')" class="nav-btn flex-1 p-3">Graph</button>
 </nav>
 
 <script>
 let entries = JSON.parse(localStorage.getItem("forgeEntries") || "[]");
 
-// ✅ SORT FIX
+// SORT entries newest to oldest
 entries = entries.sort((a,b)=>new Date(b.date)-new Date(a.date));
 
 let chart;
-let currentPhoto=null;
+let currentPhoto = null;
+
+// ✅ UNIT SYSTEM
+let unit = localStorage.getItem("forgeUnit") || "kg";
+document.getElementById("unitSelect").value = unit;
+
+function kgToLbs(kg){ return kg * 2.20462; }
+function kgToStone(kg){ return kg * 0.157473; }
+
+function convertWeight(kg, unit){
+    if(kg == null) return null;
+    if(unit === "kg") return kg;
+    if(unit === "lbs") return kgToLbs(kg);
+    if(unit === "stone") return kgToStone(kg);
+}
+
+function changeUnits(){
+    unit = document.getElementById("unitSelect").value;
+    localStorage.setItem("forgeUnit", unit);
+    loadDashboard();
+    if(!document.getElementById("graphs").classList.contains("hidden")){
+        renderChart();
+    }
+}
 
 function showScreen(id){
-document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
-document.getElementById(id).classList.remove('hidden');
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
 
-if(id==="graphs") renderChart();
-if(id==="dashboard") loadDashboard();
-if(id==="log") initLog();
+  if(id==="graphs") renderChart();
+  if(id==="dashboard") loadDashboard();
+  if(id==="log") initLog();
 }
 
 function calculateStreak(){
-if(!entries.length) return 0;
-const dates=[...new Set(entries.map(e=>e.date))].sort().reverse();
-let streak=1;
+    if(!entries.length) return 0;
+    const dates=[...new Set(entries.map(e=>e.date))].sort().reverse();
+    let streak=1;
 
-for(let i=1;i<dates.length;i++){
-if((new Date(dates[i-1])-new Date(dates[i]))/86400000===1) streak++;
-else break;
-}
-return streak;
+    for(let i=1;i<dates.length;i++){
+        if((new Date(dates[i-1])-new Date(dates[i]))/86400000===1) streak++;
+        else break;
+    }
+    return streak;
 }
 
 function loadDashboard(){
-if(!entries.length){
-dashWeight.textContent="—";
-dashWaist.textContent="—";
-streakDisplay.textContent="0 🔥";
-return;
-}
+    if(!entries.length){
+        dashWeight.textContent="—";
+        dashWaist.textContent="—";
+        streakDisplay.textContent="0 🔥";
+        return;
+    }
 
-const latest=entries[0];
-dashWeight.textContent=latest.weight ?? "—";
-dashWaist.textContent=latest.waist ?? "—";
+    const latest = entries[0];
+    const converted = convertWeight(latest.weight, unit);
 
-streakDisplay.textContent=calculateStreak()+" 🔥";
+    dashWeight.textContent = converted ? converted.toFixed(1) + " " + unit : "—";
+    dashWaist.textContent = latest.waist ?? "—";
+
+    streakDisplay.textContent = calculateStreak() + " 🔥";
 }
 
 function initLog(){
-logDate.value=new Date().toISOString().split("T")[0];
-logWeight.value="";
-logWaist.value="";
-logDose.value="";
-currentPhoto=null;
+    logDate.value = new Date().toISOString().split("T")[0];
+    logWeight.value = "";
+    logWaist.value = "";
+    logDose.value = "";
+    currentPhoto = null;
+
+    setTimeout(()=>logWeight.focus(), 100);
 }
 
 function handlePhoto(input){
-const file=input.files[0];
-if(!file) return;
+    const file=input.files[0];
+    if(!file) return;
 
-const img=new Image();
-const reader=new FileReader();
+    const img=new Image();
+    const reader=new FileReader();
 
-reader.onload=e=>img.src=e.target.result;
+    reader.onload=e=>img.src=e.target.result;
 
-img.onload=()=>{
-const canvas=document.createElement("canvas");
-const scale=600/img.width;
+    img.onload=()=>{
+        const canvas=document.createElement("canvas");
+        const scale=600/img.width;
 
-canvas.width=600;
-canvas.height=img.height*scale;
+        canvas.width=600;
+        canvas.height=img.height*scale;
 
-const ctx=canvas.getContext("2d");
-ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        const ctx=canvas.getContext("2d");
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
 
-currentPhoto=canvas.toDataURL("image/jpeg",0.7);
-};
+        currentPhoto=canvas.toDataURL("image/jpeg",0.7);
+    };
 
-reader.readAsDataURL(file);
+    reader.readAsDataURL(file);
 }
 
 function saveLogEntry(){
 
-const entry={
-date:logDate.value,
-weight:parseFloat(logWeight.value)||null,
-waist:parseFloat(logWaist.value)||null,
-dose:parseFloat(logDose.value)||null,
-photo:currentPhoto
-};
+    // convert incoming weight to kg before saving
+    let rawWeight = parseFloat(logWeight.value) || null;
 
-if(!entry.weight && !entry.waist && !entry.dose){
-alert("Enter data");
-return;
-}
+    let weightInKg = null;
+    if(rawWeight != null){
+        if(unit === "kg") weightInKg = rawWeight;
+        if(unit === "lbs") weightInKg = rawWeight / 2.20462;
+        if(unit === "stone") weightInKg = rawWeight / 0.157473;
+    }
 
-// ✅ REMOVE DUPLICATE DATE
-entries=entries.filter(e=>e.date!==entry.date);
+    const entry={
+        date:logDate.value,
+        weight:weightInKg,
+        waist:parseFloat(logWaist.value)||null,
+        dose:parseFloat(logDose.value)||null,
+        photo:currentPhoto
+    };
 
-entries.unshift(entry);
+    if(!entry.weight && !entry.waist && !entry.dose){
+        alert("Enter data");
+        return;
+    }
 
-// ✅ SORT AGAIN
-entries=entries.sort((a,b)=>new Date(b.date)-new Date(a.date));
+    entries = entries.filter(e=>e.date !== entry.date);
+    entries.unshift(entry);
 
-localStorage.setItem("forgeEntries",JSON.stringify(entries));
+    entries = entries.sort((a,b)=>new Date(b.date)-new Date(a.date));
 
-if(calculateStreak()%7===0){
-confetti({particleCount:120});
-}
+    localStorage.setItem("forgeEntries", JSON.stringify(entries));
 
-showScreen("dashboard");
+    if(calculateStreak() % 7 === 0){
+        confetti({particleCount:120});
+    }
+
+    showScreen("dashboard");
 }
 
 function renderChart(){
-if(chart) chart.destroy();
+    if(chart) chart.destroy();
 
-const ctx=document.getElementById("chart");
+    const ctx=document.getElementById("chart");
 
-const sorted=[...entries].reverse();
+    const sorted=[...entries].reverse();
 
-chart=new Chart(ctx,{
-type:"line",
-data:{
-labels:sorted.map(e=>e.date),
-datasets:[
-{
-label:"Weight",
-data:sorted.map(e=>e.weight ?? null),
-borderColor:"#67e8f9"
-},
-{
-label:"Waist",
-data:sorted.map(e=>e.waist ?? null),
-borderColor:"#fbbf24"
-}
-]
-}
-});
+    chart=new Chart(ctx,{
+        type:"line",
+        data:{
+            labels:sorted.map(e=>e.date),
+            datasets:[
+                {
+                    label:"Weight ("+unit+")",
+                    data:sorted.map(e => convertWeight(e.weight, unit)),
+                    borderColor:"#67e8f9",
+                    tension:0.3,
+                    spanGaps:true
+                },
+                {
+                    label:"Waist",
+                    data:sorted.map(e=>e.waist ?? null),
+                    borderColor:"#fbbf24",
+                    tension:0.3,
+                    spanGaps:true
+                }
+            ]
+        }
+    });
 }
 
 window.onload=()=>{
-showScreen("dashboard");
+  showScreen("dashboard");
 };
 </script>
 
