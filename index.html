@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Forge</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -13,7 +13,8 @@
 body { font-family: system-ui; }
 .glass { background: rgba(30,30,40,0.85); backdrop-filter: blur(20px); border:1px solid rgba(255,255,255,0.08); }
 .nav-btn.active { color:#67e8f9; border-bottom:3px solid #67e8f9; }
-.mainValue { font-size:2.5rem; font-weight:700; }
+.mainValue { font-size:2.2rem; font-weight:700; }
+.changeLine { font-size:1rem; margin-top:4px; }
 </style>
 </head>
 
@@ -23,25 +24,41 @@ body { font-family: system-ui; }
 <div id="dashboard" class="screen p-6 max-w-lg mx-auto">
 <h1 class="text-3xl font-bold text-cyan-400 mb-4">Forge</h1>
 
-<!-- UNIT SELECTOR -->
-<select id="unitSelect" onchange="changeUnits()" class="bg-zinc-800 p-2 rounded mb-4">
-  <option value="kg">Kg</option>
-  <option value="lbs">Lbs</option>
-  <option value="stone">Stone</option>
-</select>
+<!-- UNIT SELECTORS -->
+<div class="flex gap-3 mb-4">
+  <div class="flex flex-col flex-1">
+    <label class="text-sm text-zinc-400">Weight Unit</label>
+    <select id="weightDisplayUnit" onchange="refreshDisplay()" class="bg-zinc-800 p-2 rounded">
+      <option value="kg">Kg</option>
+      <option value="lbs">Lbs</option>
+      <option value="stone">Stone</option>
+    </select>
+  </div>
 
-<div class="mb-6">
-  <div id="streakDisplay" class="text-3xl text-orange-400">0 🔥</div>
+  <div class="flex flex-col flex-1">
+    <label class="text-sm text-zinc-400">Waist Unit</label>
+    <select id="waistDisplayUnit" onchange="refreshDisplay()" class="bg-zinc-800 p-2 rounded">
+      <option value="cm">Cm</option>
+      <option value="in">Inches</option>
+    </select>
+  </div>
 </div>
 
+<div id="streakDisplay" class="text-3xl text-orange-400 mb-6">0 🔥</div>
+
 <div class="grid grid-cols-2 gap-4">
+  <!-- WEIGHT -->
   <div class="glass p-4 rounded-xl text-center">
     <p>Weight</p>
     <div id="dashWeight" class="mainValue">—</div>
+    <div id="dashWeightChange" class="changeLine"> </div>
   </div>
+
+  <!-- WAIST -->
   <div class="glass p-4 rounded-xl text-center">
     <p>Waist</p>
     <div id="dashWaist" class="mainValue">—</div>
+    <div id="dashWaistChange" class="changeLine"> </div>
   </div>
 </div>
 
@@ -56,8 +73,31 @@ body { font-family: system-ui; }
 
 <input id="logDate" type="date" class="w-full mb-3 text-black p-2">
 
-<input id="logWeight" type="number" placeholder="Weight" class="w-full mb-3 text-black p-2">
-<input id="logWaist" type="number" placeholder="Waist" class="w-full mb-3 text-black p-2">
+<!-- WEIGHT input + unit -->
+<div>
+  <label class="text-sm">Weight</label>
+  <div class="flex gap-2">
+    <input id="logWeight" type="number" placeholder="Weight" class="flex-1 mb-3 text-black p-2">
+    <select id="logWeightUnit" class="mb-3 text-black p-2">
+      <option value="kg">Kg</option>
+      <option value="lbs">Lbs</option>
+      <option value="stone">Stone</option>
+    </select>
+  </div>
+</div>
+
+<!-- WAIST input + unit -->
+<div>
+  <label class="text-sm">Waist</label>
+  <div class="flex gap-2">
+    <input id="logWaist" type="number" placeholder="Waist" class="flex-1 mb-3 text-black p-2">
+    <select id="logWaistUnit" class="mb-3 text-black p-2">
+      <option value="cm">Cm</option>
+      <option value="in">Inches</option>
+    </select>
+  </div>
+</div>
+
 <input id="logDose" type="number" placeholder="Dose" class="w-full mb-3 text-black p-2">
 
 <input id="photoInput" type="file" accept="image/*" onchange="handlePhoto(this)">
@@ -81,182 +121,242 @@ body { font-family: system-ui; }
 
 <script>
 let entries = JSON.parse(localStorage.getItem("forgeEntries") || "[]");
-
-// SORT entries newest to oldest
-entries = entries.sort((a,b)=>new Date(b.date)-new Date(a.date));
+entries.sort((a,b)=>new Date(b.date)-new Date(a.date));
 
 let chart;
-let currentPhoto = null;
+let currentPhoto=null;
 
-// ✅ UNIT SYSTEM
-let unit = localStorage.getItem("forgeUnit") || "kg";
-document.getElementById("unitSelect").value = unit;
+/* ------------------------------
+   UNIT CONVERSIONS
+------------------------------ */
 
-function kgToLbs(kg){ return kg * 2.20462; }
-function kgToStone(kg){ return kg * 0.157473; }
-
-function convertWeight(kg, unit){
-    if(kg == null) return null;
-    if(unit === "kg") return kg;
-    if(unit === "lbs") return kgToLbs(kg);
-    if(unit === "stone") return kgToStone(kg);
+function weightToKg(v,u){
+  if(v==null) return null;
+  if(u==="kg") return v;
+  if(u==="lbs") return v / 2.20462;
+  if(u==="stone") return v / 0.157473;
 }
 
-function changeUnits(){
-    unit = document.getElementById("unitSelect").value;
-    localStorage.setItem("forgeUnit", unit);
-    loadDashboard();
-    if(!document.getElementById("graphs").classList.contains("hidden")){
-        renderChart();
-    }
+function kgToDisplay(v,u){
+  if(v==null) return null;
+  if(u==="kg") return v;
+  if(u==="lbs") return v * 2.20462;
+  if(u==="stone") return v * 0.157473;
 }
+
+function waistToCm(v,u){
+  if(v==null) return null;
+  if(u==="cm") return v;
+  if(u==="in") return v * 2.54;
+}
+
+function cmToDisplay(v,u){
+  if(v==null) return null;
+  if(u==="cm") return v;
+  if(u==="in") return v / 2.54;
+}
+
+/* ------------------------------
+   NAV + SCREEN HANDLING
+------------------------------ */
 
 function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
 
-  if(id==="graphs") renderChart();
-  if(id==="dashboard") loadDashboard();
+  if(id==="dashboard") refreshDisplay();
   if(id==="log") initLog();
-}
-
-function calculateStreak(){
-    if(!entries.length) return 0;
-    const dates=[...new Set(entries.map(e=>e.date))].sort().reverse();
-    let streak=1;
-
-    for(let i=1;i<dates.length;i++){
-        if((new Date(dates[i-1])-new Date(dates[i]))/86400000===1) streak++;
-        else break;
-    }
-    return streak;
-}
-
-function loadDashboard(){
-    if(!entries.length){
-        dashWeight.textContent="—";
-        dashWaist.textContent="—";
-        streakDisplay.textContent="0 🔥";
-        return;
-    }
-
-    const latest = entries[0];
-    const converted = convertWeight(latest.weight, unit);
-
-    dashWeight.textContent = converted ? converted.toFixed(1) + " " + unit : "—";
-    dashWaist.textContent = latest.waist ?? "—";
-
-    streakDisplay.textContent = calculateStreak() + " 🔥";
+  if(id==="graphs") renderChart();
 }
 
 function initLog(){
-    logDate.value = new Date().toISOString().split("T")[0];
-    logWeight.value = "";
-    logWaist.value = "";
-    logDose.value = "";
-    currentPhoto = null;
-
-    setTimeout(()=>logWeight.focus(), 100);
+  logDate.value = new Date().toISOString().split("T")[0];
+  logWeight.value="";
+  logWaist.value="";
+  logDose.value="";
+  currentPhoto=null;
 }
 
-function handlePhoto(input){
-    const file=input.files[0];
-    if(!file) return;
-
-    const img=new Image();
-    const reader=new FileReader();
-
-    reader.onload=e=>img.src=e.target.result;
-
-    img.onload=()=>{
-        const canvas=document.createElement("canvas");
-        const scale=600/img.width;
-
-        canvas.width=600;
-        canvas.height=img.height*scale;
-
-        const ctx=canvas.getContext("2d");
-        ctx.drawImage(img,0,0,canvas.width,canvas.height);
-
-        currentPhoto=canvas.toDataURL("image/jpeg",0.7);
-    };
-
-    reader.readAsDataURL(file);
-}
+/* ------------------------------
+   SAVE ENTRY
+------------------------------ */
 
 function saveLogEntry(){
+  let wVal = parseFloat(logWeight.value) || null;
+  let wUnit = logWeightUnit.value;
 
-    // convert incoming weight to kg before saving
-    let rawWeight = parseFloat(logWeight.value) || null;
+  let waistVal = parseFloat(logWaist.value) || null;
+  let waistUnit = logWaistUnit.value;
 
-    let weightInKg = null;
-    if(rawWeight != null){
-        if(unit === "kg") weightInKg = rawWeight;
-        if(unit === "lbs") weightInKg = rawWeight / 2.20462;
-        if(unit === "stone") weightInKg = rawWeight / 0.157473;
-    }
+  const entry = {
+    date: logDate.value,
+    weight: weightToKg(wVal, wUnit),
+    waist: waistToCm(waistVal, waistUnit),
+    dose: parseFloat(logDose.value) || null,
+    photo: currentPhoto
+  };
 
-    const entry={
-        date:logDate.value,
-        weight:weightInKg,
-        waist:parseFloat(logWaist.value)||null,
-        dose:parseFloat(logDose.value)||null,
-        photo:currentPhoto
-    };
+  if(entry.weight==null && entry.waist==null && entry.dose==null){
+    alert("Enter some data");
+    return;
+  }
 
-    if(!entry.weight && !entry.waist && !entry.dose){
-        alert("Enter data");
-        return;
-    }
+  entries = entries.filter(e=>e.date!==entry.date);
+  entries.unshift(entry);
+  entries.sort((a,b)=>new Date(b.date)-new Date(a.date));
 
-    entries = entries.filter(e=>e.date !== entry.date);
-    entries.unshift(entry);
+  localStorage.setItem("forgeEntries", JSON.stringify(entries));
 
-    entries = entries.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(calculateStreak() % 7 === 0){
+    confetti({particleCount:120});
+  }
 
-    localStorage.setItem("forgeEntries", JSON.stringify(entries));
-
-    if(calculateStreak() % 7 === 0){
-        confetti({particleCount:120});
-    }
-
-    showScreen("dashboard");
+  showScreen("dashboard");
 }
+
+/* ------------------------------
+   DASHBOARD DISPLAY + CHANGE ARROWS
+------------------------------ */
+
+function refreshDisplay(){
+
+  let weightUnit = weightDisplayUnit.value;
+  let waistUnit = waistDisplayUnit.value;
+
+  if(entries.length===0){
+    dashWeight.textContent="—";
+    dashWaist.textContent="—";
+    dashWeightChange.textContent="";
+    dashWaistChange.textContent="";
+    return;
+  }
+
+  const latest = entries[0];
+  const prev = entries[1] || null;
+
+  /* WEIGHT */
+  let latestW = kgToDisplay(latest.weight, weightUnit);
+  dashWeight.textContent = latestW ? latestW.toFixed(1)+" "+weightUnit : "—";
+
+  if(prev && prev.weight!=null && latest.weight!=null){
+    let diff = latest.weight - prev.weight;
+    let diffDisp = kgToDisplay(Math.abs(diff), weightUnit).toFixed(1);
+
+    if(diff > 0){
+      dashWeightChange.innerHTML = `<span class="text-red-400">↑ ${diffDisp}</span>`;
+    } else if(diff < 0){
+      dashWeightChange.innerHTML = `<span class="text-green-400">↓ ${diffDisp}</span>`;
+    } else {
+      dashWeightChange.innerHTML = `<span class="text-zinc-400">0.0</span>`;
+    }
+  } else {
+    dashWeightChange.textContent="";
+  }
+
+  /* WAIST */
+  let latestWaist = cmToDisplay(latest.waist, waistUnit);
+  dashWaist.textContent = latestWaist ? latestWaist.toFixed(1)+" "+waistUnit : "—";
+
+  if(prev && prev.waist!=null && latest.waist!=null){
+    let diff = latest.waist - prev.waist;
+    let diffDisp = cmToDisplay(Math.abs(diff), waistUnit).toFixed(1);
+
+    if(diff > 0){
+      dashWaistChange.innerHTML = `<span class="text-red-400">↑ ${diffDisp}</span>`;
+    } else if(diff < 0){
+      dashWaistChange.innerHTML = `<span class="text-green-400">↓ ${diffDisp}</span>`;
+    } else {
+      dashWaistChange.innerHTML = `<span class="text-zinc-400">0.0</span>`;
+    }
+  } else {
+    dashWaistChange.textContent="";
+  }
+
+  streakDisplay.textContent = calculateStreak()+" 🔥";
+}
+
+/* ------------------------------
+   STREAK
+------------------------------ */
+
+function calculateStreak(){
+  if(!entries.length) return 0;
+  const dates=[...new Set(entries.map(e=>e.date))].sort().reverse();
+  let streak=1;
+
+  for(let i=1;i<dates.length;i++){
+    if((new Date(dates[i-1])-new Date(dates[i]))/86400000===1) streak++;
+    else break;
+  }
+  return streak;
+}
+
+/* ------------------------------
+   IMAGE HANDLING
+------------------------------ */
+
+function handlePhoto(input){
+  const file=input.files[0];
+  if(!file) return;
+
+  const img=new Image();
+  const reader=new FileReader();
+
+  reader.onload=e=>img.src=e.target.result;
+  img.onload=()=>{
+    const canvas=document.createElement("canvas");
+    const scale=600/img.width;
+
+    canvas.width=600;
+    canvas.height=img.height*scale;
+
+    const ctx=canvas.getContext("2d");
+    ctx.drawImage(img,0,0,canvas.width,canvas.height);
+
+    currentPhoto=canvas.toDataURL("image/jpeg",0.7);
+  };
+
+  reader.readAsDataURL(file);
+}
+
+/* ------------------------------
+   GRAPH
+------------------------------ */
 
 function renderChart(){
-    if(chart) chart.destroy();
+  if(chart) chart.destroy();
 
-    const ctx=document.getElementById("chart");
+  const ctx=document.getElementById("chart");
+  const sorted=[...entries].reverse();
 
-    const sorted=[...entries].reverse();
+  let weightUnit = weightDisplayUnit.value;
+  let waistUnit = waistDisplayUnit.value;
 
-    chart=new Chart(ctx,{
-        type:"line",
-        data:{
-            labels:sorted.map(e=>e.date),
-            datasets:[
-                {
-                    label:"Weight ("+unit+")",
-                    data:sorted.map(e => convertWeight(e.weight, unit)),
-                    borderColor:"#67e8f9",
-                    tension:0.3,
-                    spanGaps:true
-                },
-                {
-                    label:"Waist",
-                    data:sorted.map(e=>e.waist ?? null),
-                    borderColor:"#fbbf24",
-                    tension:0.3,
-                    spanGaps:true
-                }
-            ]
+  chart=new Chart(ctx,{
+    type:"line",
+    data:{
+      labels:sorted.map(e=>e.date),
+      datasets:[
+        {
+          label:"Weight ("+weightUnit+")",
+          data: sorted.map(e=>kgToDisplay(e.weight,weightUnit)),
+          borderColor:"#67e8f9",
+          tension:0.3,
+          spanGaps:true
+        },
+        {
+          label:"Waist ("+waistUnit+")",
+          data: sorted.map(e=>cmToDisplay(e.waist,waistUnit)),
+          borderColor:"#fbbf24",
+          tension:0.3,
+          spanGaps:true
         }
-    });
+      ]
+    }
+  });
 }
 
-window.onload=()=>{
-  showScreen("dashboard");
-};
+window.onload=()=>showScreen("dashboard");
 </script>
 
 </body>
